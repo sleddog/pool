@@ -16,28 +16,33 @@ function onloadHandler()
    
    // data structures - generate initial balls
    var ballList = new BallList();
-   ballList.balls = [
-      new Ball(150, 40,  0, 10, "rgba(238,172,78,.75)"), //row 1
+   ballList.balls = getRack(0,0);   
 
-      new Ball(140, 60, 0, 10, "rgba(220,5,134,.9)"),    //row 2
-      new Ball(160, 60, 0, 10, "rgba(145,200,46,.9)"),
+   function getRack(x, y) {
 
-      new Ball(130,  80, 0, 10, "rgba(145,200,46,.9)"),  //row 3
-      new Ball(150, 80,  0, 10, "rgba(45,172,173,.9)"),
-      new Ball(170, 80,  0, 10, "rgba(47,118,178,.9)"),
+       return [
+          new Ball(150, 40,  0, 10, "rgba(238,172,78,.75)"), //row 1
 
-      new Ball(120, 100, 0, 10, "rgba(248,172,78,.9)"), //row 4
-      new Ball(140, 100, 0, 10, "rgba(99,198,78,.9)"),
-      new Ball(160, 100, 0, 10, "rgba(140,45,136,.9)"),
-      new Ball(180, 100, 0, 10, "rgba(226,74,63,.9)"),
+          new Ball(140, 60, 0, 10, "rgba(220,5,134,.9)"),    //row 2
+          new Ball(160, 60, 0, 10, "rgba(145,200,46,.9)"),
 
-      new Ball(110,  120, 0, 10, "rgba(145,200,46,.9)"),  //row 3
-      new Ball(130,  120, 0, 10, "rgba(145,200,46,.9)"),
-      new Ball(150, 120,  0, 10, "rgba(45,172,173,.9)"),
-      new Ball(170, 120,  0, 10, "rgba(47,118,178,.9)"),
-      new Ball(190, 120,  0, 10, "rgba(47,118,178,.9)"),
-   ];
-   
+          new Ball(130,  80, 0, 10, "rgba(145,200,46,.9)"),  //row 3
+          new Ball(150, 80,  0, 10, "rgba(45,172,173,.9)"),
+          new Ball(170, 80,  0, 10, "rgba(47,118,178,.9)"),
+
+          new Ball(120, 100, 0, 10, "rgba(248,172,78,.9)"), //row 4
+          new Ball(140, 100, 0, 10, "rgba(99,198,78,.9)"),
+          new Ball(160, 100, 0, 10, "rgba(140,45,136,.9)"),
+          new Ball(180, 100, 0, 10, "rgba(226,74,63,.9)"),
+
+          new Ball(110,  120, 0, 10, "rgba(145,200,46,.9)"),  //row 3
+          new Ball(130,  120, 0, 10, "rgba(145,200,46,.9)"),
+          new Ball(150, 120,  0, 10, "rgba(45,172,173,.9)"),
+          new Ball(170, 120,  0, 10, "rgba(47,118,178,.9)"),
+          new Ball(190, 120,  0, 10, "rgba(47,118,178,.9)"),
+       ];
+    }
+
    function drawText(x, y, text, colour)
    {
      ctx.fillStyle = colour;
@@ -224,7 +229,7 @@ window.requestAnimFrame = (function()
 #canvas
 {
    border: 1px solid #aaa;
-   background-image: url('images/cardbg.jpg');
+   background: #1D8348;
    -moz-box-shadow: 3px 3px 8px #222;
    -webkit-box-shadow: 3px 3px 8px #222;
    box-shadow: 3px 3px 8px #222;
