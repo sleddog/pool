@@ -6,6 +6,16 @@
       <script>
 window.addEventListener('load', onloadHandler, false);
 
+var WHITE = "rgb(255,255,255)";
+var YELLOW = "rgba(238,172,78,.75)";
+var BLUE = "rgb(0, 0, 153)";
+var RED = "rgba(226,74,63,.9)";
+var PURPLE = "rgb(102, 0, 204)";
+var ORANGE = "rgb(255, 102, 0)";
+var GREEN = "rgb(0, 102, 0)";
+var MAROON = "rgb(128, 0, 0)";
+var BLACK = "rgba(0,0,0)";
+
 function onloadHandler()
 {
    // get the canvas DOM element
@@ -16,42 +26,46 @@ function onloadHandler()
    
    // data structures - generate initial balls
    var ballList = new BallList();
-   ballList.balls = getRack(0,0);   
+   ballList.balls = getRack();
 
-   function getRack(x, y) {
+   function getRack() {
+       var radius = 20;
+       var xFactor = 1.73205;
+       var x = 800;
+       var y = 320;
 
        return [
-          new Ball(150, 40,  0, 10, "rgba(238,172,78,.75)"), //row 1
+          new Ball(1, YELLOW, x, y,  0, radius),
 
-          new Ball(140, 60, 0, 10, "rgba(220,5,134,.9)"),    //row 2
-          new Ball(160, 60, 0, 10, "rgba(145,200,46,.9)"),
+          new Ball(2, BLUE, x+radius*xFactor, y-radius,  0, radius),
+          new Ball(3, RED, x+radius*xFactor, y+radius,  0, radius),
 
-          new Ball(130,  80, 0, 10, "rgba(145,200,46,.9)"),  //row 3
-          new Ball(150, 80,  0, 10, "rgba(45,172,173,.9)"),
-          new Ball(170, 80,  0, 10, "rgba(47,118,178,.9)"),
+          new Ball(4, PURPLE, x+2*radius*xFactor, y-radius*2,  0, radius),
+          new Ball(8, BLACK, x+2*radius*xFactor, y,  0, radius),
+          new Ball(6, GREEN, x+2*radius*xFactor, y+radius*2,  0, radius),
 
-          new Ball(120, 100, 0, 10, "rgba(248,172,78,.9)"), //row 4
-          new Ball(140, 100, 0, 10, "rgba(99,198,78,.9)"),
-          new Ball(160, 100, 0, 10, "rgba(140,45,136,.9)"),
-          new Ball(180, 100, 0, 10, "rgba(226,74,63,.9)"),
+          new Ball(7, MAROON, x+3*radius*xFactor, y-radius*3,  0, radius),
+          new Ball(5, ORANGE, x+3*radius*xFactor, y+radius*3,  0, radius),
+          new Ball(9, YELLOW, x+3*radius*xFactor, y-radius,  0, radius),
+          new Ball(10, BLUE, x+3*radius*xFactor, y+radius,  0, radius),
 
-          new Ball(110,  120, 0, 10, "rgba(145,200,46,.9)"),  //row 3
-          new Ball(130,  120, 0, 10, "rgba(145,200,46,.9)"),
-          new Ball(150, 120,  0, 10, "rgba(45,172,173,.9)"),
-          new Ball(170, 120,  0, 10, "rgba(47,118,178,.9)"),
-          new Ball(190, 120,  0, 10, "rgba(47,118,178,.9)"),
+          new Ball(11, RED, x+4*radius*xFactor, y-radius*4,  0, radius),
+          new Ball(12, PURPLE, x+4*radius*xFactor, y-radius*2,  0, radius),
+          new Ball(13, ORANGE, x+4*radius*xFactor, y,  0, radius),
+          new Ball(14, GREEN, x+4*radius*xFactor, y+radius*2,  0, radius),
+          new Ball(15, MAROON, x+4*radius*xFactor, y+radius*4,  0, radius),
        ];
     }
 
-   function drawText(x, y, text, colour)
+   function drawText(x, y, text, color)
    {
-     ctx.fillStyle = colour;
+     ctx.fillStyle = color;
      ctx.fillText(text, x, y);
    };
    
-   function drawDisc(x, y, rad, colour)
+   function drawDisc(x, y, rad, color)
    {
-      ctx.fillStyle = colour;
+      ctx.fillStyle = color;
       ctx.beginPath();
       ctx.arc(x, y, rad, 0, TWOPI, true);
       ctx.fill();
@@ -90,8 +104,8 @@ function onloadHandler()
       
       // perform initial one time rendering of text etc.
       ctx.save();
-      ctx.font = "Bold 12pt Arial";
-      drawText(320,080,"Pool - Devin Gray", "rgb(80,80,80)");
+      ctx.font = "Bold 40pt Arial";
+      drawText(320,080,"Pool - Devin Gray", WHITE);
       ctx.restore();
       
       // render each edge ball - which react to mouse movement
@@ -161,15 +175,16 @@ function onloadHandler()
       };
    };
    
-   function Ball(x, y, z, radius, colour)
+   function Ball(num, color, x, y, z, radius)
    {
+      this.num = num;
       this.origin = new Vector3D(x,y,z);
       this.position = new Vector3D(x,y,z);
       this.targetPos = new Vector3D(x,y,z);
       this.originradius = radius;
       this.radius = radius;
       this.velocity = new Vector3D(0,0,0);
-      this.colour = colour;
+      this.color = color;
       this.friction = 0.75;
       this.spring = 0.05;
       
@@ -198,10 +213,16 @@ function onloadHandler()
       
       this.render = function()
       {
-         ctx.fillStyle = this.colour;
+         ctx.fillStyle = this.color;
          ctx.beginPath();
          ctx.arc(this.position.x, this.position.y, this.radius, 0, TWOPI, true);
          ctx.fill();
+         // draw the ball number text
+         ctx.save();
+         ctx.font = "Bold 12pt Arial";
+         var textFudge = this.num > 9 ? 2.6 : 1.6;
+         drawText(this.position.x-textFudge*3,this.position.y+textFudge+2.1, this.num, WHITE);
+         ctx.restore();
       };
    };
 }
@@ -221,7 +242,7 @@ window.requestAnimFrame = (function()
 })();
       </script>
       <style>
-.card-container
+.table-container
 {
    text-align: center;
    margin-bottom: 2.5em;
@@ -233,20 +254,6 @@ window.requestAnimFrame = (function()
    -moz-box-shadow: 3px 3px 8px #222;
    -webkit-box-shadow: 3px 3px 8px #222;
    box-shadow: 3px 3px 8px #222;
-}
-.title
-{
-   text-align: center;
-   font-family: Segoe UI Light, Arial, Helvetica;
-   font-size: 2.2em;
-   margin: 1em;
-}
-.info
-{
-   text-align: center;
-   font-family: Segoe UI Light, Arial, Helvetica;
-   font-size: 1.2em;
-   margin: 0.25em;
 }
 a, a:visited, a:active, a:hover
 {
@@ -261,8 +268,8 @@ a:hover
    </head>
    
    <body style="background-color: #aaa">
-      <div class="card-container">
-         <canvas id="canvas" width="560" height="320"></canvas>
+      <div class="table-container">
+         <canvas id="canvas" width="1120" height="640"></canvas>
       </div>
    </body>
 </html>
