@@ -9,15 +9,16 @@ window.addEventListener('load', onloadHandler, false);
 var WHITE = "rgb(255,255,255)";
 var YELLOW = "rgba(238,172,78,.75)";
 var BLUE = "rgb(0, 0, 153)";
-var RED = "rgba(226,74,63,.9)";
+var RED = "rgb(255,0,0)";
 var PURPLE = "rgb(102, 0, 204)";
 var ORANGE = "rgb(255, 102, 0)";
 var GREEN = "rgb(0, 102, 0)";
 var MAROON = "rgb(128, 0, 0)";
 var BLACK = "rgb(0,0,0)";
 
-var SOLID = 0;
-var STRIPE = 1;
+var CUE = 0;
+var SOLID = 1;
+var STRIPE = 2;
 
 function onloadHandler()
 {
@@ -38,6 +39,8 @@ function onloadHandler()
        var y = 320;
 
        return [
+          new Ball(0, WHITE, CUE, 200, y,  0, radius),
+
           new Ball(1, YELLOW, SOLID, x, y,  0, radius),
 
           new Ball(2, BLUE, SOLID, x+radius*xFactor, y-radius,  0, radius),
@@ -139,28 +142,12 @@ function onloadHandler()
             dy = this.mousey - (ball.position.y + offsety);
             d = Sqrt(dx * dx + dy * dy);
             
-            // if the mouse is within the radius of a blog - then nudge it out
+            // if the mouse is within the radius of a ball - then nudge it out
             var rad = (ball.originradius > 16 ? ball.originradius : 16);
             if (d < rad)
             {
                ball.targetPos.x = ball.position.x - dx;
                ball.targetPos.y = ball.position.y - dy;
-               ball.spring = 0.033;
-            }
-            // else based on a random chance, pulse the ball
-            else if (Rnd() > 0.995)
-            {
-               ball.targetPos.x = ball.origin.x;
-               ball.targetPos.y = ball.origin.y;
-               ball.velocity.z += (Rnd()*0.30 - 0.15);
-               ball.spring = 0.0125;
-            }
-            // else just animate towards the original position
-            else
-            {
-               ball.targetPos.x = ball.origin.x;
-               ball.targetPos.y = ball.origin.y;
-               ball.spring = 0.05;
             }
             
             ball.update();
@@ -189,16 +176,15 @@ function onloadHandler()
       this.originradius = radius;
       this.radius = radius;
       this.velocity = new Vector3D(0,0,0);
-      this.friction = 0.75;
-      this.spring = 0.05;
+      this.friction = 0.05;
       
       this.update = function()
       {
-         this.velocity.x += (this.targetPos.x - this.position.x) * this.spring;
+         this.velocity.x += (this.targetPos.x - this.position.x);
          this.velocity.x *= this.friction;
          this.position.x += this.velocity.x;
          
-         this.velocity.y += (this.targetPos.y - this.position.y) * this.spring;
+         this.velocity.y += (this.targetPos.y - this.position.y);
          this.velocity.y *= this.friction;
          this.position.y += this.velocity.y;
          
@@ -207,12 +193,12 @@ function onloadHandler()
              d = Sqrt(dox * dox + doy * doy);
          
          this.targetPos.z = d/150 + 1;
-         this.velocity.z += (this.targetPos.z - this.position.z) * this.spring;
+         this.velocity.z += (this.targetPos.z - this.position.z);
          this.velocity.z *= this.friction;
          this.position.z += this.velocity.z;
          
-         this.radius = this.originradius * this.position.z;
-         if (this.radius < 1) this.radius = 1;
+         //this.radius = this.originradius * this.position.z;
+         //if (this.radius < 1) this.radius = 1;
       };
       
       this.render = function()
@@ -223,10 +209,12 @@ function onloadHandler()
          ctx.fill();
 
          //draw inner circle
-         ctx.fillStyle = WHITE;
-         ctx.beginPath();
-         ctx.arc(this.position.x, this.position.y, this.radius/2, 0, TWOPI, true);
-         ctx.fill();
+	 if(this.type != CUE) {
+             ctx.fillStyle = WHITE;
+             ctx.beginPath();
+             ctx.arc(this.position.x, this.position.y, this.radius/2, 0, TWOPI, true);
+             ctx.fill();
+         }
 
 	 //draw the stripe
 	 if(this.type == STRIPE) {
@@ -246,11 +234,14 @@ function onloadHandler()
 	 }
 
          // draw the ball number text
-         ctx.save();
-         ctx.font = "Bold 10pt Arial";
-         var textFudge = this.num > 9 ? 2.9 : 1.3;
-         drawText(this.position.x-textFudge*3,this.position.y+textFudge+3.1, this.num, BLACK);
-         ctx.restore();
+	 if(this.type != CUE) {
+             ctx.save();
+	     var fontSize = this.radius / 2;
+             ctx.font = "Bold " + fontSize + "pt Arial";
+             var textFudge = this.num > 9 ? 2.9 : 1.3;
+             drawText(this.position.x-textFudge*3,this.position.y+textFudge+3.1, this.num, BLACK);
+             ctx.restore();
+	 }
 
 
       };
