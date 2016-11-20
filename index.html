@@ -7,7 +7,7 @@
 window.addEventListener('load', onloadHandler, false);
 
 var WHITE = "rgb(255,255,255)";
-var YELLOW = "rgba(238,172,78,.75)";
+var YELLOW = "rgb(238,172,78)";
 var BLUE = "rgb(0, 0, 153)";
 var RED = "rgb(255,0,0)";
 var PURPLE = "rgb(102, 0, 204)";
@@ -20,6 +20,80 @@ var CUE = 0;
 var SOLID = 1;
 var STRIPE = 2;
 
+var X_MAX = 1120; 
+var Y_MAX = 640; 
+
+//all the balls on the table
+var ballList;
+
+function shoot() {
+    var x = document.getElementById('cue_x').value; 
+    var y = document.getElementById('cue_y').value; 
+    var velocity = document.getElementById('cue_velocity').value; 
+    var cue_ball = ballList.balls[0];
+    cue_ball.velocity.x = x * velocity;
+    cue_ball.velocity.y = y * velocity;
+    ballList.balls[0] = cue_ball;
+}
+
+function colliding(b1, b2) {
+    //compare if this ball "hits" the other
+    var ball1 = ballList.balls[b1];
+    var ball2 = ballList.balls[b2];
+
+    var dx = ball1.position.x - ball2.position.x;
+    var dy = ball1.position.y - ball2.position.y;
+    var distance = Math.sqrt(dx * dx + dy * dy);
+
+    if (distance < ball1.radius + ball1.radius) {
+        console.log('collision');
+	return true;
+    }
+    return false;
+}
+
+function resolveCollision(b1, b2) {
+    var ball1 = ballList.balls[b1];
+    var ball2 = ballList.balls[b2];
+
+/*
+    // get the mtd
+    //Vector2d delta = (position.subtract(ball.position));
+    var delta = ball1.position.sub(ball2.position);
+    console.log("delta:");
+    console.log(delta);
+
+    float d = delta.getLength();
+    // minimum translation distance to push balls apart after intersecting
+    Vector2d mtd = delta.multiply(((getRadius() + ball.getRadius())-d)/d); 
+
+
+    // resolve intersection --
+    // inverse mass quantities
+    float im1 = 1 / getMass(); 
+    float im2 = 1 / ball.getMass();
+
+    // push-pull them apart based off their mass
+    position = position.add(mtd.multiply(im1 / (im1 + im2)));
+    ball.position = ball.position.subtract(mtd.multiply(im2 / (im1 + im2)));
+
+    // impact speed
+    Vector2d v = (this.velocity.subtract(ball.velocity));
+    float vn = v.dot(mtd.normalize());
+
+    // sphere intersecting but moving away from each other already
+    if (vn > 0.0f) return;
+
+    // collision impulse
+    float i = (-(1.0f + Constants.restitution) * vn) / (im1 + im2);
+    Vector2d impulse = mtd.multiply(i);
+
+    // change in momentum
+    this.velocity = this.velocity.add(impulse.multiply(im1));
+    ball.velocity = ball.velocity.subtract(impulse.multiply(im2));
+*/
+}
+
 function onloadHandler()
 {
    // get the canvas DOM element
@@ -29,7 +103,7 @@ function onloadHandler()
        height = canvas.height;
    
    // data structures - generate initial balls
-   var ballList = new BallList();
+   ballList = new BallList();
    ballList.balls = getRack();
 
    function getRack() {
@@ -39,27 +113,29 @@ function onloadHandler()
        var y = 320;
 
        return [
-          new Ball(0, WHITE, CUE, 200, y,  0, radius),
+          new Ball(0, WHITE, CUE, 200, y,  radius),
 
-          new Ball(1, YELLOW, SOLID, x, y,  0, radius),
+          new Ball(1, YELLOW, SOLID, x, y,  radius),
+	  /*
 
-          new Ball(2, BLUE, SOLID, x+radius*xFactor, y-radius,  0, radius),
-          new Ball(3, RED, SOLID, x+radius*xFactor, y+radius,  0, radius),
+          new Ball(2, BLUE, SOLID, x+radius*xFactor, y-radius,  radius),
+          new Ball(3, RED, SOLID, x+radius*xFactor, y+radius,  radius),
 
-          new Ball(4, PURPLE, SOLID, x+2*radius*xFactor, y-radius*2,  0, radius),
-          new Ball(8, BLACK, SOLID, x+2*radius*xFactor, y,  0, radius),
-          new Ball(6, GREEN, STRIPE, x+2*radius*xFactor, y+radius*2,  0, radius),
+          new Ball(4, PURPLE, SOLID, x+2*radius*xFactor, y-radius*2,  radius),
+          new Ball(8, BLACK, SOLID, x+2*radius*xFactor, y,  radius),
+          new Ball(6, GREEN, STRIPE, x+2*radius*xFactor, y+radius*2,  radius),
 
-          new Ball(7, MAROON, STRIPE, x+3*radius*xFactor, y-radius*3,  0, radius),
-          new Ball(5, ORANGE, STRIPE, x+3*radius*xFactor, y+radius*3,  0, radius),
-          new Ball(9, YELLOW, STRIPE, x+3*radius*xFactor, y-radius,  0, radius),
-          new Ball(10, BLUE, STRIPE, x+3*radius*xFactor, y+radius,  0, radius),
+          new Ball(7, MAROON, STRIPE, x+3*radius*xFactor, y-radius*3,  radius),
+          new Ball(5, ORANGE, STRIPE, x+3*radius*xFactor, y+radius*3,  radius),
+          new Ball(9, YELLOW, STRIPE, x+3*radius*xFactor, y-radius,  radius),
+          new Ball(10, BLUE, STRIPE, x+3*radius*xFactor, y+radius,  radius),
 
-          new Ball(11, RED, STRIPE, x+4*radius*xFactor, y-radius*4,  0, radius),
-          new Ball(12, PURPLE, STRIPE, x+4*radius*xFactor, y-radius*2,  0, radius),
-          new Ball(13, ORANGE, STRIPE, x+4*radius*xFactor, y,  0, radius),
-          new Ball(14, GREEN, STRIPE, x+4*radius*xFactor, y+radius*2,  0, radius),
-          new Ball(15, MAROON, STRIPE, x+4*radius*xFactor, y+radius*4,  0, radius),
+          new Ball(11, RED, STRIPE, x+4*radius*xFactor, y-radius*4,  radius),
+          new Ball(12, PURPLE, STRIPE, x+4*radius*xFactor, y-radius*2,  radius),
+          new Ball(13, ORANGE, STRIPE, x+4*radius*xFactor, y,  radius),
+          new Ball(14, GREEN, STRIPE, x+4*radius*xFactor, y+radius*2,  radius),
+          new Ball(15, MAROON, STRIPE, x+4*radius*xFactor, y+radius*4,  radius),
+	  */
        ];
     }
 
@@ -132,25 +208,32 @@ function onloadHandler()
       
       this.update = function()
       {
-         // all the other balls can animate based on mouse interaction
-         for (var i = 0,dx,dy,d; i < this.balls.length; i++)
+	 //collison detection
+
+	 //first check bumpers
+         for (var i = 0; i < this.balls.length; i++)
          {
             ball = this.balls[i];
-            
-            // calculate offset from mouse position - apply canvas element offset
-            dx = this.mousex - (ball.position.x + offsetx);
-            dy = this.mousey - (ball.position.y + offsety);
-            d = Sqrt(dx * dx + dy * dy);
-            
-            // if the mouse is within the radius of a ball - then nudge it out
-            var rad = (ball.originradius > 16 ? ball.originradius : 16);
-            if (d < rad)
-            {
-               ball.targetPos.x = ball.position.x - dx;
-               ball.targetPos.y = ball.position.y - dy;
-            }
+
+	    if(ball.position.x > X_MAX-ball.radius || ball.position.x < 0+ball.radius) {
+                ball.velocity.x *= -1;
+	    }
+	    if(ball.position.y > Y_MAX-ball.radius || ball.position.y < 0+ball.radius) {
+                ball.velocity.y *= -1;
+	    }
             
             ball.update();
+         }
+
+	 //now check balls
+         for (var b1 = 0; b1 < this.balls.length; b1++)
+         {
+             for (var b2 = b1 + 1; b2 < this.balls.length; b2++)
+             {
+                 if(colliding(b1, b2)) {
+		     resolveCollision(b1, b2);
+		 }
+             }
          }
       };
       
@@ -165,40 +248,24 @@ function onloadHandler()
       };
    };
    
-   function Ball(num, color, type, x, y, z, radius)
+   function Ball(num, color, type, x, y, radius)
    {
       this.num = num;
       this.color = color;
       this.type = type;
-      this.origin = new Vector3D(x,y,z);
-      this.position = new Vector3D(x,y,z);
-      this.targetPos = new Vector3D(x,y,z);
-      this.originradius = radius;
+      this.origin = new Vector(x,y);
+      this.position = new Vector(x,y);
       this.radius = radius;
-      this.velocity = new Vector3D(0,0,0);
-      this.friction = 0.05;
+      this.velocity = new Vector(0,0);
+      this.friction = 0.995;
       
       this.update = function()
       {
-         this.velocity.x += (this.targetPos.x - this.position.x);
          this.velocity.x *= this.friction;
          this.position.x += this.velocity.x;
          
-         this.velocity.y += (this.targetPos.y - this.position.y);
          this.velocity.y *= this.friction;
          this.position.y += this.velocity.y;
-         
-         var dox = this.origin.x - this.position.x,
-             doy = this.origin.y - this.position.y,
-             d = Sqrt(dox * dox + doy * doy);
-         
-         this.targetPos.z = d/150 + 1;
-         this.velocity.z += (this.targetPos.z - this.position.z);
-         this.velocity.z *= this.friction;
-         this.position.z += this.velocity.z;
-         
-         //this.radius = this.originradius * this.position.z;
-         //if (this.radius < 1) this.radius = 1;
       };
       
       this.render = function()
@@ -243,7 +310,13 @@ function onloadHandler()
              ctx.restore();
 	 }
 
-
+	 // draw cue ball's little red dots
+	 if(this.type == CUE) {
+             ctx.fillStyle = RED;
+             ctx.beginPath();
+             ctx.arc(this.position.x, this.position.y, this.radius/6, 0, TWOPI, true);
+             ctx.fill();
+	 }
       };
    };
 }
@@ -266,7 +339,7 @@ window.requestAnimFrame = (function()
 .table-container
 {
    text-align: center;
-   margin-bottom: 2.5em;
+   margin-bottom: 1.2em;
 }
 #canvas
 {
@@ -292,5 +365,9 @@ a:hover
       <div class="table-container">
          <canvas id="canvas" width="1120" height="640"></canvas>
       </div>
+      x: <input type="text" id="cue_x" value="10" /> 
+      y: <input type="text" id="cue_y" value="10" /> 
+      velocity: <input type="text" id="cue_velocity" value="2" /> 
+      <input type="button" id="shoot" value="Shoot" onclick="shoot()" />
    </body>
 </html>
