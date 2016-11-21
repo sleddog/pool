@@ -16,6 +16,13 @@ var GREEN = "rgb(0, 102, 0)";
 var MAROON = "rgb(128, 0, 0)";
 var BLACK = "rgb(0,0,0)";
 
+var BROWN = "rgb(80, 33, 4)";
+var GHOST_WHITE = "rgba(255,255,255, 0.3)";
+
+var BUMPER_FELT_GREEN = "rgb(21, 70, 13)";
+var BUMPER_WIDTH = 25;
+var BALL_RADIUS = 20;
+
 var CUE = 0;
 var SOLID = 1;
 var STRIPE = 2;
@@ -37,6 +44,7 @@ function shoot() {
     var cue_ball = ballList.balls[0];
     cue_ball.velocity.x = x * velocity;
     cue_ball.velocity.y = y * velocity;
+    ballList.showGhostBall = false;
     ballList.balls[0] = cue_ball;
 }
 
@@ -50,7 +58,6 @@ function colliding(b1, b2) {
     var distance = Math.sqrt(dx * dx + dy * dy);
 
     if (distance < ball1.radius + ball1.radius) {
-        console.log('collision');
 	return true;
     }
     return false;
@@ -105,6 +112,33 @@ function resolveCollision(b1, b2) {
     ball2.velocity = newVel2;
 }
 
+function potted(b) {
+    var ball = ballList.balls[b];
+
+    //check each pocket
+    var pockets = [
+        new Vector(30,20), //top left
+        new Vector(X_MAX/2,10), //top middle
+        new Vector(X_MAX-30,20), //top right
+        new Vector(30,Y_MAX-20), //bottom left
+        new Vector(X_MAX/2,Y_MAX-10), //bottom middle
+        new Vector(X_MAX,Y_MAX-20), //bottom right
+    ];
+
+    for(var p=0;p<pockets.length; p++) {
+	var pocket = pockets[p];
+        var dx = ball.position.x - pocket.x;
+        var dy = ball.position.y - pocket.y;
+        var distance = Math.sqrt(dx * dx + dy * dy);
+
+        if (distance < ball.radius + 25) {
+            console.log('POTTED in pocket: '+ p + '!!!!');
+	    return true;
+        }
+    }
+    return false;
+}
+
 function onloadHandler()
 {
    // get the canvas DOM element
@@ -118,7 +152,7 @@ function onloadHandler()
    ballList.balls = getRack();
 
    function getRack() {
-       var radius = 20;
+       var radius = BALL_RADIUS;
        var xFactor = 1.73205;
        var x = 800;
        var y = 320;
@@ -133,10 +167,10 @@ function onloadHandler()
 
           new Ball(4, PURPLE, SOLID, x+2*radius*xFactor-2, y-radius*2,  radius),
           new Ball(8, BLACK, SOLID, x+2*radius*xFactor-2, y,  radius),
-          new Ball(6, GREEN, STRIPE, x+2*radius*xFactor-2, y+radius*2,  radius),
+          new Ball(6, GREEN, SOLID, x+2*radius*xFactor-2, y+radius*2,  radius),
 
-          new Ball(7, MAROON, STRIPE, x+3*radius*xFactor-1, y-radius*3,  radius),
-          new Ball(5, ORANGE, STRIPE, x+3*radius*xFactor-1, y+radius*3,  radius),
+          new Ball(7, MAROON, SOLID, x+3*radius*xFactor-1, y-radius*3,  radius),
+          new Ball(5, ORANGE, SOLID, x+3*radius*xFactor-1, y+radius*3,  radius),
           new Ball(9, YELLOW, STRIPE, x+3*radius*xFactor-1, y-radius,  radius),
           new Ball(10, BLUE, STRIPE, x+3*radius*xFactor-1, y+radius,  radius),
 
@@ -161,14 +195,135 @@ function onloadHandler()
       ctx.arc(x, y, rad, 0, TWOPI, true);
       ctx.fill();
    };
+
+   function drawPockets() {
+      ctx.fillStyle = BLACK;
+
+      //top left
+      ctx.beginPath();
+      ctx.arc(30, 20, 30, 0, TWOPI, true);
+      ctx.fill();
+
+      //top middle
+      ctx.beginPath();
+      ctx.arc(X_MAX/2, 10, 30, 0, TWOPI, true);
+      ctx.fill();
+
+      //top right
+      ctx.beginPath();
+      ctx.arc(X_MAX-30, 20, 30, 0, TWOPI, true);
+      ctx.fill();
+
+      //bottom left
+      ctx.beginPath();
+      ctx.arc(30, Y_MAX-20, 30, 0, TWOPI, true);
+      ctx.fill();
+
+      //bottom middle
+      ctx.beginPath();
+      ctx.arc(X_MAX/2, Y_MAX-10, 30, 0, TWOPI, true);
+      ctx.fill();
+
+      //bottom right
+      ctx.beginPath();
+      ctx.arc(X_MAX-30, Y_MAX-20, 30, 0, TWOPI, true);
+      ctx.fill();
+   }
+
+   function drawBumpers() {
+      //green bumpers
+      ctx.fillStyle = BUMPER_FELT_GREEN;
+      //top left
+      ctx.beginPath();
+      ctx.moveTo(50,10);
+      ctx.lineTo(X_MAX/2-20, 10);
+      ctx.lineTo(X_MAX/2-40, 35);
+      ctx.lineTo(75,35);
+      ctx.fill();
+      
+      //top right
+      ctx.beginPath();
+      ctx.moveTo(X_MAX/2+20, 10);
+      ctx.lineTo(X_MAX-50, 10);
+      ctx.lineTo(X_MAX-75, 35);
+      ctx.lineTo(X_MAX/2+40,35);
+      ctx.fill();
+
+      //bottom left
+      ctx.beginPath();
+      ctx.moveTo(50,Y_MAX-10);
+      ctx.lineTo(X_MAX/2-20, Y_MAX-10);
+      ctx.lineTo(X_MAX/2-40, Y_MAX-35);
+      ctx.lineTo(75,Y_MAX-35);
+      ctx.fill();
+      
+      //bottom right
+      ctx.beginPath();
+      ctx.moveTo(X_MAX/2+20, Y_MAX-10);
+      ctx.lineTo(X_MAX-50, Y_MAX-10);
+      ctx.lineTo(X_MAX-75, Y_MAX-35);
+      ctx.lineTo(X_MAX/2+40,Y_MAX-35);
+      ctx.fill();
+
+      //left
+      ctx.beginPath();
+      ctx.moveTo(20, 50);
+      ctx.lineTo(20, Y_MAX-50);
+      ctx.lineTo(35, Y_MAX-70);
+      ctx.lineTo(35,70);
+      ctx.fill();
+
+      //right
+      ctx.beginPath();
+      ctx.moveTo(X_MAX-20, 50);
+      ctx.lineTo(X_MAX-20, Y_MAX-50);
+      ctx.lineTo(X_MAX-35, Y_MAX-70);
+      ctx.lineTo(X_MAX-35,70);
+      ctx.fill();
+
+      //wooden rails
+      ctx.fillStyle = BROWN;
+
+      //top rail
+      ctx.beginPath();
+      ctx.rect(0,0,X_MAX, 20);
+      ctx.fill();
+
+      //right rail
+      ctx.beginPath();
+      ctx.rect(X_MAX-20,0,X_MAX-20, Y_MAX);
+      ctx.fill();
+
+      //bottom rail
+      ctx.beginPath();
+      ctx.rect(0,Y_MAX-20,X_MAX, Y_MAX);
+      ctx.fill();
+
+      //left rail
+      ctx.beginPath();
+      ctx.rect(0,0,20, Y_MAX);
+      ctx.fill();
+
+   }
    
    // event handlers
-   var mouseMove = function(e)
+   var mouseClick = function(e)
    {
       ballList.mousex = e.clientX;
       ballList.mousey = e.clientY;
+      ballList.showGhostBall = !ballList.showGhostBall;
+      //normalize ghostball
+      var cue_ball = ballList.balls[0];
+      var dx = ballList.mousex - (cue_ball.position.x+offsetx);
+      var dy = ballList.mousey - (cue_ball.position.y+offsety);
+      var length = Math.sqrt(dx * dx + dy * dy);
+      var newVelX = dx / length;
+      var newVelY = dy / length;
+      document.getElementById('cue_x').value = newVelX;
+      document.getElementById('cue_y').value = newVelY;
+      document.getElementById('cue_velocity').value = length / 40;
    };
-   canvas.addEventListener("mousemove", mouseMove, false);
+   canvas.addEventListener("click", mouseClick, false);
    
    var offsetx = 0, offsety = 0;
    
@@ -200,6 +355,9 @@ function onloadHandler()
       drawText(320,080,"Pool - by Devin Gray", WHITE);
       ctx.restore();
       */
+
+      drawBumpers();
+      drawPockets();
       
       // render each edge ball - which react to mouse movement
       ctx.globalCompositeOperation = 'darker';
@@ -216,20 +374,41 @@ function onloadHandler()
    {
       this.mousex = this.mousey = 0;
       this.balls = [];
+      this.showGhostBall = false;
       
       this.update = function()
       {
 	 //collison detection
+	 //check for potted balls
+         for (var i = 0; i < this.balls.length; i++)
+         {
+	     if(potted(i)) {
+	         ball = this.balls[i];
+		 ball.potted = true;
+		 //TODO draw animation for ball to drop in pocket
+		 ball.position.x = -100;
+		 ball.position.y = -100;
+		 ball.velocity.x = 0;
+		 ball.velocity.y = 0;
 
-	 //first check bumpers
+		 if(ball.type == CUE) {
+		     console.log("SCRATCH - auto respawning...");
+		     ball.position.x = 200;
+		     ball.position.y = 320;
+		     ball.potted = false;
+		 }
+             }
+	 }
+
+	 //now check bumpers
          for (var i = 0; i < this.balls.length; i++)
          {
             ball = this.balls[i];
 
-	    if(ball.position.x > X_MAX-ball.radius || ball.position.x < 0+ball.radius) {
+	    if(ball.position.x > X_MAX-BUMPER_WIDTH-ball.radius || ball.position.x < 0+BUMPER_WIDTH+ball.radius) {
                 ball.velocity.x *= -1;
 	    }
-	    if(ball.position.y > Y_MAX-ball.radius || ball.position.y < 0+ball.radius) {
+	    if(ball.position.y > Y_MAX-BUMPER_WIDTH-ball.radius || ball.position.y < 0+BUMPER_WIDTH+ball.radius) {
                 ball.velocity.y *= -1;
 	    }
             
@@ -256,6 +435,19 @@ function onloadHandler()
             this.balls[i].render();
             ctx.restore();
          }
+
+	 if(this.showGhostBall) {
+	     //draw the ghost ball
+             ctx.fillStyle = GHOST_WHITE;
+             ctx.beginPath();
+             ctx.arc(this.mousex, this.mousey, BALL_RADIUS, 0, TWOPI, true);
+             ctx.fill();
+	     //draw the ghost line
+	     ctx.beginPath();
+	     ctx.moveTo(this.balls[0].position.x, this.balls[0].position.y);
+	     ctx.lineTo(this.mousex, this.mousey);
+	     ctx.stroke();
+	 }
       };
    };
    
@@ -268,7 +460,8 @@ function onloadHandler()
       this.position = new Vector(x,y);
       this.radius = radius;
       this.velocity = new Vector(0,0);
-      this.friction = 0.995;
+      this.friction = 0.991;
+      this.potted = false;
       
       this.update = function()
       {
@@ -281,6 +474,9 @@ function onloadHandler()
       
       this.render = function()
       {
+	 if(this.potted) {
+	     return;
+	 }
          ctx.fillStyle = this.color;
          ctx.beginPath();
          ctx.arc(this.position.x, this.position.y, this.radius, 0, TWOPI, true);
@@ -304,6 +500,8 @@ function onloadHandler()
              ctx.arc(this.position.x, this.position.y, this.radius, 0.5*PI-0.8, 0.5*PI+0.8, false);
              ctx.fill();
 	 }
+
+	 // draw the little curved line below the 6 and 9 ball
 	 if(this.num == 6 || this.num == 9) {
              ctx.fillStyle = BLACK;
              ctx.beginPath();
@@ -355,7 +553,7 @@ window.requestAnimFrame = (function()
 #canvas
 {
    border: 1px solid #aaa;
-   background: #1D8348;
+   background: #42A931;
    -moz-box-shadow: 3px 3px 8px #222;
    -webkit-box-shadow: 3px 3px 8px #222;
    box-shadow: 3px 3px 8px #222;
