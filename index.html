@@ -23,6 +23,10 @@ var STRIPE = 2;
 var X_MAX = 1120; 
 var Y_MAX = 640; 
 
+//for physics folks
+var BALL_MASS = 1;
+var RESTITUTION = 0.85;
+
 //all the balls on the table
 var ballList;
 
@@ -56,42 +60,49 @@ function resolveCollision(b1, b2) {
     var ball1 = ballList.balls[b1];
     var ball2 = ballList.balls[b2];
 
-/*
     // get the mtd
-    //Vector2d delta = (position.subtract(ball.position));
-    var delta = ball1.position.sub(ball2.position);
-    console.log("delta:");
-    console.log(delta);
+    var pos1 = ball1.position.clone();
+    var pos2 = ball2.position.clone();
+    var delta = pos1.sub(ball2.position);
 
-    float d = delta.getLength();
+    //float d = delta.getLength();
+    var d = delta.length();
+    
     // minimum translation distance to push balls apart after intersecting
-    Vector2d mtd = delta.multiply(((getRadius() + ball.getRadius())-d)/d); 
-
+    var tmp = ((ball1.radius + ball2.radius)-d) / d;
+    var mtd = delta.scale(tmp);
 
     // resolve intersection --
     // inverse mass quantities
-    float im1 = 1 / getMass(); 
-    float im2 = 1 / ball.getMass();
+    var im1 = 1 / BALL_MASS;
+    var im2 = 1 / BALL_MASS;
 
     // push-pull them apart based off their mass
-    position = position.add(mtd.multiply(im1 / (im1 + im2)));
-    ball.position = ball.position.subtract(mtd.multiply(im2 / (im1 + im2)));
+    //TODO may need...
+    //var newPos1 = pos1.add(mtd.scale(im1 / (im1 + im2)));
+    //var newPos2 = pos2.sub(mtd.scale(im2 / (im1 + im2)));
 
     // impact speed
-    Vector2d v = (this.velocity.subtract(ball.velocity));
-    float vn = v.dot(mtd.normalize());
+    var vel1 = ball1.velocity.clone();
+    var vel2 = ball2.velocity.clone();
+    var v = vel1.sub(vel2);
+    var mtdn = mtd.norm();
+    var vn = v.dot(mtd.norm());
 
     // sphere intersecting but moving away from each other already
-    if (vn > 0.0f) return;
+    if(vn > 0.0) {
+        return;
+    }
 
     // collision impulse
-    float i = (-(1.0f + Constants.restitution) * vn) / (im1 + im2);
-    Vector2d impulse = mtd.multiply(i);
+    var i = (-(1.0 + RESTITUTION) * vn) / (im1 + im2);
+    var impulse = mtd.scale(i);
 
     // change in momentum
-    this.velocity = this.velocity.add(impulse.multiply(im1));
-    ball.velocity = ball.velocity.subtract(impulse.multiply(im2));
-*/
+    var newVel1 = vel1.add(impulse.scale(im1)); 
+    var newVel2 = vel2.sub(impulse.scale(im2)); 
+    ball1.velocity = newVel1;
+    ball2.velocity = newVel2;
 }
 
 function onloadHandler()
@@ -115,27 +126,25 @@ function onloadHandler()
        return [
           new Ball(0, WHITE, CUE, 200, y,  radius),
 
-          new Ball(1, YELLOW, SOLID, x, y,  radius),
-	  /*
+          new Ball(1, YELLOW, SOLID, x-4, y,  radius),
 
-          new Ball(2, BLUE, SOLID, x+radius*xFactor, y-radius,  radius),
-          new Ball(3, RED, SOLID, x+radius*xFactor, y+radius,  radius),
+          new Ball(2, BLUE, SOLID, x+radius*xFactor-3, y-radius,  radius),
+          new Ball(3, RED, SOLID, x+radius*xFactor-3, y+radius,  radius),
 
-          new Ball(4, PURPLE, SOLID, x+2*radius*xFactor, y-radius*2,  radius),
-          new Ball(8, BLACK, SOLID, x+2*radius*xFactor, y,  radius),
-          new Ball(6, GREEN, STRIPE, x+2*radius*xFactor, y+radius*2,  radius),
+          new Ball(4, PURPLE, SOLID, x+2*radius*xFactor-2, y-radius*2,  radius),
+          new Ball(8, BLACK, SOLID, x+2*radius*xFactor-2, y,  radius),
+          new Ball(6, GREEN, STRIPE, x+2*radius*xFactor-2, y+radius*2,  radius),
 
-          new Ball(7, MAROON, STRIPE, x+3*radius*xFactor, y-radius*3,  radius),
-          new Ball(5, ORANGE, STRIPE, x+3*radius*xFactor, y+radius*3,  radius),
-          new Ball(9, YELLOW, STRIPE, x+3*radius*xFactor, y-radius,  radius),
-          new Ball(10, BLUE, STRIPE, x+3*radius*xFactor, y+radius,  radius),
+          new Ball(7, MAROON, STRIPE, x+3*radius*xFactor-1, y-radius*3,  radius),
+          new Ball(5, ORANGE, STRIPE, x+3*radius*xFactor-1, y+radius*3,  radius),
+          new Ball(9, YELLOW, STRIPE, x+3*radius*xFactor-1, y-radius,  radius),
+          new Ball(10, BLUE, STRIPE, x+3*radius*xFactor-1, y+radius,  radius),
 
           new Ball(11, RED, STRIPE, x+4*radius*xFactor, y-radius*4,  radius),
           new Ball(12, PURPLE, STRIPE, x+4*radius*xFactor, y-radius*2,  radius),
           new Ball(13, ORANGE, STRIPE, x+4*radius*xFactor, y,  radius),
           new Ball(14, GREEN, STRIPE, x+4*radius*xFactor, y+radius*2,  radius),
           new Ball(15, MAROON, STRIPE, x+4*radius*xFactor, y+radius*4,  radius),
-	  */
        ];
     }
 
@@ -185,10 +194,12 @@ function onloadHandler()
       ctx.clearRect(0, 0, width, height);
       
       // perform initial one time rendering of text etc.
+      /*
       ctx.save();
       ctx.font = "Bold 40pt Arial";
       drawText(320,080,"Pool - by Devin Gray", WHITE);
       ctx.restore();
+      */
       
       // render each edge ball - which react to mouse movement
       ctx.globalCompositeOperation = 'darker';
@@ -366,8 +377,8 @@ a:hover
          <canvas id="canvas" width="1120" height="640"></canvas>
       </div>
       x: <input type="text" id="cue_x" value="10" /> 
-      y: <input type="text" id="cue_y" value="10" /> 
-      velocity: <input type="text" id="cue_velocity" value="2" /> 
+      y: <input type="text" id="cue_y" value="0" /> 
+      velocity: <input type="text" id="cue_velocity" value="4" /> 
       <input type="button" id="shoot" value="Shoot" onclick="shoot()" />
    </body>
 </html>
