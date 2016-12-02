@@ -530,6 +530,15 @@ function onloadHandler()
 	 }
       };
    };
+
+   document.addEventListener("keydown", keyDownEvent, false);
+
+   function keyDownEvent(e) {
+       var keyCode = e.keyCode;
+       if(keyCode == 32) { //space bar
+           shoot();
+       }
+   }
 }
 
 // requestAnimFrame shim
@@ -579,6 +588,6 @@ a:hover
       x: <input type="text" id="cue_x" value="10" /> 
       y: <input type="text" id="cue_y" value="0" /> 
       velocity: <input type="text" id="cue_velocity" value="4" /> 
-      <input type="button" id="shoot" value="Shoot" onclick="shoot()" />
+      <input type="button" id="shoot" value="Shoot [spacebar]" onclick="shoot()" />
    </body>
 </html>
