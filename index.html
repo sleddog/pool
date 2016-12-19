@@ -19,6 +19,9 @@ var BLACK = "rgb(0,0,0)";
 var BROWN = "rgb(80, 33, 4)";
 var GHOST_WHITE = "rgba(255,255,255, 0.3)";
 
+var GREY = "rgb(170,170,170)";
+var DARK_GREY = "rgb(200,200,200)";
+
 var BUMPER_FELT_GREEN = "rgb(21, 70, 13)";
 var BUMPER_WIDTH = 25;
 var BALL_RADIUS = 20;
@@ -36,6 +39,7 @@ var RESTITUTION = 0.85;
 
 //all the balls on the table
 var ballList;
+var pottedBalls = [];
 
 function shoot() {
     var x = document.getElementById('cue_x').value; 
@@ -49,6 +53,11 @@ function shoot() {
 }
 
 function colliding(b1, b2) {
+    //if potted, no collision possible
+    if(b1.potted || b2.potted) {
+        return false;
+    }
+
     //compare if this ball "hits" the other
     var ball1 = ballList.balls[b1];
     var ball2 = ballList.balls[b2];
@@ -71,8 +80,6 @@ function resolveCollision(b1, b2) {
     var pos1 = ball1.position.clone();
     var pos2 = ball2.position.clone();
     var delta = pos1.sub(ball2.position);
-
-    //float d = delta.getLength();
     var d = delta.length();
     
     // minimum translation distance to push balls apart after intersecting
@@ -306,6 +313,41 @@ function onloadHandler()
       ctx.rect(0,0,20, Y_MAX);
       ctx.fill();
 
+
+      //background behind tracks
+      ctx.fillStyle = GREY;
+      ctx.beginPath();
+      ctx.rect(X_MAX,0,70,Y_MAX);
+      ctx.fill();
+
+      //potted ball tracks
+      ctx.fillStyle = DARK_GREY;
+      ctx.beginPath();
+      ctx.rect(X_MAX+20,100,10,Y_MAX);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.rect(X_MAX+40,100,10,Y_MAX);
+      ctx.fill();
+
+      //little curve tracks
+      ctx.beginPath();
+      ctx.strokeStyle = DARK_GREY;
+      ctx.lineWidth = 10;
+      ctx.arc(X_MAX+5, 100, 20, 1.5*PI, 0, false);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.lineWidth = 10;
+      ctx.arc(X_MAX+5, 100, 40, 1.5*PI, 0, false);
+      ctx.stroke();
+
+      //small little horizontal tracks
+      ctx.beginPath();
+      ctx.rect(X_MAX,55,5,10);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.rect(X_MAX,75,5,10);
+      ctx.fill();
+
    }
    
    // event handlers
@@ -386,19 +428,23 @@ function onloadHandler()
          {
 	     if(potted(i)) {
 	         ball = this.balls[i];
-		 ball.potted = true;
-		 //TODO draw animation for ball to drop in pocket
-		 ball.position.x = -100;
-		 ball.position.y = -100;
-		 ball.velocity.x = 0;
-		 ball.velocity.y = 0;
-
 		 if(ball.type == CUE) {
 		     console.log("SCRATCH - auto respawning...");
 		     ball.position.x = 200;
 		     ball.position.y = 320;
 		     ball.potted = false;
+		     continue;
 		 }
+
+		 //TODO draw animation for ball to drop in pocket
+		 // for now... just put the ball in the tracks based on number potted
+		 pottedBalls.push(ball);
+		 ball.potted = true;
+		 ball.position.x = X_MAX+35;
+		 ball.position.y = Y_MAX-(ball.radius*2 * pottedBalls.length);
+		 ball.velocity.x = 0;
+		 ball.velocity.y = 0;
+
              }
 	 }
 
@@ -406,6 +452,11 @@ function onloadHandler()
          for (var i = 0; i < this.balls.length; i++)
          {
             ball = this.balls[i];
+
+	    //if potted, no collision with bumper
+	    if(ball.potted) {
+                continue;
+	    }
 
 	    if(ball.position.x > X_MAX-BUMPER_WIDTH-ball.radius || ball.position.x < 0+BUMPER_WIDTH+ball.radius) {
                 ball.velocity.x *= -1;
@@ -441,6 +492,8 @@ function onloadHandler()
 	 if(this.showGhostBall) {
 	     //draw the ghost ball
              ctx.fillStyle = GHOST_WHITE;
+             ctx.strokeStyle = GHOST_WHITE;
+	     ctx.lineWidth = 1;
              ctx.beginPath();
              ctx.arc(this.mousex, this.mousey, BALL_RADIUS, 0, TWOPI, true);
              ctx.fill();
@@ -476,9 +529,9 @@ function onloadHandler()
       
       this.render = function()
       {
-	 if(this.potted) {
-	     return;
-	 }
+	 //if(this.potted) {
+	 //    return;
+	 //}
          ctx.fillStyle = this.color;
          ctx.beginPath();
          ctx.arc(this.position.x, this.position.y, this.radius, 0, TWOPI, true);
@@ -505,8 +558,9 @@ function onloadHandler()
 
 	 // draw the little curved line below the 6 and 9 ball
 	 if(this.num == 6 || this.num == 9) {
-             ctx.fillStyle = BLACK;
+             ctx.strokeStyle = BLACK;
              ctx.beginPath();
+             ctx.lineWidth = 1;
              ctx.arc(this.position.x, this.position.y, this.radius/3, 0.5*PI-0.5, 0.5*PI+0.5, false);
              ctx.stroke();
 	 }
@@ -583,7 +637,7 @@ a:hover
    
    <body style="background-color: #aaa">
       <div class="table-container">
-         <canvas id="canvas" width="1120" height="640"></canvas>
+         <canvas id="canvas" width="1190" height="640"></canvas>
       </div>
       x: <input type="text" id="cue_x" value="10" /> 
       y: <input type="text" id="cue_y" value="0" /> 
