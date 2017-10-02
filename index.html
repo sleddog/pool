@@ -8,6 +8,7 @@
 	  <script src="onloadHandler.js"></script>
 	  <script src="resolveCollision.js"></script>
 	  <script src="potted.js"></script>
+	  <link rel="icon" type="image/png" href="favicon.png">
       <script>
 window.addEventListener('load', onloadHandler, false);
 
@@ -27,7 +28,7 @@ var GHOST_WHITE = "rgba(255,255,255, 0.3)";
 var GREY = "rgb(170,170,170)";
 var DARK_GREY = "rgb(200,200,200)";
 
-var BUMPER_FELT_GREEN = "rgb(21, 70, 13)";
+var FELT_COLOR = "rgb(21, 70, 13)";
 var BUMPER_WIDTH = 25;
 var BALL_RADIUS = 20;
 var CUE = 0;
@@ -35,7 +36,6 @@ var SOLID = 1;
 var STRIPE = 2;
 var X_MAX = 1120; 
 var Y_MAX = 640; 
-
 //for physics folks
 var BALL_MASS = 1;
 var RESTITUTION = 0.85;
@@ -43,14 +43,15 @@ var RESTITUTION = 0.85;
 //all the balls on the table
 var ballList;
 var pottedBalls = [];
+
 // requestAnimFrame shim
 window.requestAnimFrame = (function()
 {
-   return  window.requestAnimationFrame       || 
-           window.webkitRequestAnimationFrame || 
-           window.mozRequestAnimationFrame    || 
-           window.oRequestAnimationFrame      || 
-           window.msRequestAnimationFrame     || 
+   return  window.requestAnimationFrame       ||
+           window.webkitRequestAnimationFrame ||
+           window.mozRequestAnimationFrame    ||
+           window.oRequestAnimationFrame      ||
+           window.msRequestAnimationFrame     ||
            function(callback, element)
            {
                window.setTimeout(callback, 1000 / 60);
@@ -80,16 +81,25 @@ a:hover
 {
    text-decoration: underline;
 }
+#linkDiv
+{
+  text-align: right;
+}
       </style>
    </head>
-   
+
    <body style="background-color: #aaa">
       <div class="table-container">
          <canvas id="canvas" width="1190" height="640"></canvas>
       </div>
-      x: <input type="text" id="cue_x" value="10" /> 
-      y: <input type="text" id="cue_y" value="0" /> 
-      velocity: <input type="text" id="cue_velocity" value="4" /> 
+      felt color: <input type="color" id="felt_color" value="#15460D" />
+      x: <input type="text" id="cue_x" value="10" />
+      y: <input type="text" id="cue_y" value="0" />
+      velocity: <input type="text" id="cue_velocity" value="4" />
       <input type="button" id="shoot" value="Shoot [spacebar]" onclick="shoot()" />
+      <div id="linkDiv">
+         <a id="link" href="https://github.com/sleddog/pool" target="_blank">Check me out on Github</a>
+      </div>
    </body>
+
 </html>
