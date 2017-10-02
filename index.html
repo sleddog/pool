@@ -45,7 +45,14 @@ var pottedBalls = [];
 function shoot() {
     var x = document.getElementById('cue_x').value; 
     var y = document.getElementById('cue_y').value; 
+
     var velocity = document.getElementById('cue_velocity').value; 
+    if(velocity  > 100)
+      velocity = 100;
+    if(velocity < 0)
+      velocity = 0;
+    document.getElementById('cue_velocity').value = velocity;
+
     var cue_ball = ballList.balls[0];
     cue_ball.velocity.x = x * velocity;
     cue_ball.velocity.y = y * velocity;
