@@ -3,6 +3,7 @@
    <head>
       <title>Pool - by Devin Gray</title>
       <script src="mathlib-min.js"></script>
+      <link rel="icon" type="image/png" href="favicon.png">
       <script>
 window.addEventListener('load', onloadHandler, false);
 
@@ -22,7 +23,7 @@ var GHOST_WHITE = "rgba(255,255,255, 0.3)";
 var GREY = "rgb(170,170,170)";
 var DARK_GREY = "rgb(200,200,200)";
 
-var BUMPER_FELT_GREEN = "rgb(21, 70, 13)";
+var FELT_COLOR = "rgb(21, 70, 13)";
 var BUMPER_WIDTH = 25;
 var BALL_RADIUS = 20;
 
@@ -44,7 +45,15 @@ var pottedBalls = [];
 function shoot() {
     var x = document.getElementById('cue_x').value;
     var y = document.getElementById('cue_y').value;
+
+
     var velocity = document.getElementById('cue_velocity').value;
+    if(velocity  > 100)
+      velocity = 100;
+    if(velocity < 0)
+      velocity = 0;
+    document.getElementById('cue_velocity').value = velocity;
+
     var cue_ball = ballList.balls[0];
     cue_ball.velocity.x = x * velocity;
     cue_ball.velocity.y = y * velocity;
@@ -162,6 +171,8 @@ function onloadHandler()
        width = canvas.width,
        height = canvas.height;
 
+   document.getElementById('felt_color').onchange = getFeltColor;
+
    // data structures - generate initial balls
    ballList = new BallList();
    ballList.balls = getRack();
@@ -196,6 +207,11 @@ function onloadHandler()
           new Ball(15, MAROON, STRIPE, x+4*radius*xFactor, y+radius*4,  radius),
        ];
     }
+
+   function getFeltColor()
+   {
+     FELT_COLOR = this.value;
+   }
 
    function drawText(x, y, text, color)
    {
@@ -247,7 +263,7 @@ function onloadHandler()
 
    function drawBumpers() {
       //green bumpers
-      ctx.fillStyle = BUMPER_FELT_GREEN;
+      ctx.fillStyle = FELT_COLOR;
       //top left
       ctx.beginPath();
       ctx.moveTo(50,10);
@@ -436,7 +452,9 @@ function onloadHandler()
 	         ball = this.balls[i];
 		 if(ball.type == CUE) {
 		     console.log("SCRATCH - auto respawning...");
-		     ball.position.x = 200;
+		     ball.velocity.x = 0;
+         	     ball.velocity.y = 0;
+         	     ball.position.x = 200;
 		     ball.position.y = 320;
 		     ball.potted = false;
 		     continue;
@@ -638,6 +656,10 @@ a:hover
 {
    text-decoration: underline;
 }
+#linkDiv
+{
+  text-align: right;
+}
       </style>
    </head>
 
@@ -645,6 +667,8 @@ a:hover
       <div class="table-container">
          <canvas id="canvas" width="1190" height="640"></canvas>
       </div>
+
+      felt color: <input type="color" id="felt_color" value="#15460D" />
       x: <input type="text" id="cue_x" value="10" />
       y: <input type="text" id="cue_y" value="0" />
       velocity: <input type="text" id="cue_velocity" value="4" />
@@ -660,5 +684,10 @@ a:hover
           <option value="MAROON">Maroon</option>
           <option value="BLACK">Black</option>
       </select>
+
+      <div id="linkDiv">
+         <a id="link" href="https://github.com/sleddog/pool" target="_blank">Check me out on Github</a>
+      </div>
    </body>
+
 </html>
