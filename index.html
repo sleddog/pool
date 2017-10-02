@@ -46,6 +46,7 @@ function shoot() {
     var x = document.getElementById('cue_x').value;
     var y = document.getElementById('cue_y').value;
 
+
     var velocity = document.getElementById('cue_velocity').value;
     if(velocity  > 100)
       velocity = 100;
@@ -59,6 +60,12 @@ function shoot() {
     ballList.showGhostBall = false;
     ballList.balls[0] = cue_ball;
 }
+
+function changeColor(selectedObject) {
+   var color = selectedObject.value;
+   var canvas = document.getElementById("canvas");
+   canvas.style.backgroundColor = color;
+};
 
 function colliding(b1, b2) {
     //if potted, no collision possible
@@ -163,6 +170,7 @@ function onloadHandler()
        ctx = canvas.getContext("2d"),
        width = canvas.width,
        height = canvas.height;
+
    document.getElementById('felt_color').onchange = getFeltColor;
 
    // data structures - generate initial balls
@@ -659,11 +667,24 @@ a:hover
       <div class="table-container">
          <canvas id="canvas" width="1190" height="640"></canvas>
       </div>
+
       felt color: <input type="color" id="felt_color" value="#15460D" />
       x: <input type="text" id="cue_x" value="10" />
       y: <input type="text" id="cue_y" value="0" />
       velocity: <input type="text" id="cue_velocity" value="4" />
       <input type="button" id="shoot" value="Shoot [spacebar]" onclick="shoot()" />
+      <select onchange="changeColor(this)">
+          <option value="GREEN">Green</option>
+          <option value="RED">Red</option>
+          <option value="BLUE">Blue</option>
+          <option value="YELLOW">Yellow</option>
+          <option value="WHITE">White</option>
+          <option value="PURPLE">Purple</option>
+          <option value="ORANGE">Orange</option>
+          <option value="MAROON">Maroon</option>
+          <option value="BLACK">Black</option>
+      </select>
+
       <div id="linkDiv">
          <a id="link" href="https://github.com/sleddog/pool" target="_blank">Check me out on Github</a>
       </div>
