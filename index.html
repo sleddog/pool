@@ -23,7 +23,7 @@ var GHOST_WHITE = "rgba(255,255,255, 0.3)";
 var GREY = "rgb(170,170,170)";
 var DARK_GREY = "rgb(200,200,200)";
 
-var BUMPER_FELT_GREEN = "rgb(21, 70, 13)";
+var FELT_COLOR = "rgb(21, 70, 13)";
 var BUMPER_WIDTH = 25;
 var BALL_RADIUS = 20;
 
@@ -156,7 +156,8 @@ function onloadHandler()
        ctx = canvas.getContext("2d"),
        width = canvas.width,
        height = canvas.height;
-   
+   document.getElementById('felt_color').onchange = getFeltColor;
+
    // data structures - generate initial balls
    ballList = new BallList();
    ballList.balls = getRack();
@@ -191,6 +192,11 @@ function onloadHandler()
           new Ball(15, MAROON, STRIPE, x+4*radius*xFactor, y+radius*4,  radius),
        ];
     }
+
+   function getFeltColor()
+   {
+     FELT_COLOR = this.value;
+   }
 
    function drawText(x, y, text, color)
    {
@@ -242,7 +248,7 @@ function onloadHandler()
 
    function drawBumpers() {
       //green bumpers
-      ctx.fillStyle = BUMPER_FELT_GREEN;
+      ctx.fillStyle = FELT_COLOR;
       //top left
       ctx.beginPath();
       ctx.moveTo(50,10);
@@ -640,6 +646,7 @@ a:hover
       <div class="table-container">
          <canvas id="canvas" width="1190" height="640"></canvas>
       </div>
+      felt color: <input type="color" id="felt_color" value="#15460D" />
       x: <input type="text" id="cue_x" value="10" /> 
       y: <input type="text" id="cue_y" value="0" /> 
       velocity: <input type="text" id="cue_velocity" value="4" /> 
