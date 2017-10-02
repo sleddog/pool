@@ -30,8 +30,8 @@ var CUE = 0;
 var SOLID = 1;
 var STRIPE = 2;
 
-var X_MAX = 1120; 
-var Y_MAX = 640; 
+var X_MAX = 1120;
+var Y_MAX = 640;
 
 //for physics folks
 var BALL_MASS = 1;
@@ -42,15 +42,21 @@ var ballList;
 var pottedBalls = [];
 
 function shoot() {
-    var x = document.getElementById('cue_x').value; 
-    var y = document.getElementById('cue_y').value; 
-    var velocity = document.getElementById('cue_velocity').value; 
+    var x = document.getElementById('cue_x').value;
+    var y = document.getElementById('cue_y').value;
+    var velocity = document.getElementById('cue_velocity').value;
     var cue_ball = ballList.balls[0];
     cue_ball.velocity.x = x * velocity;
     cue_ball.velocity.y = y * velocity;
     ballList.showGhostBall = false;
     ballList.balls[0] = cue_ball;
 }
+
+function changeColor(selectedObject) {
+   var color = selectedObject.value;
+   var canvas = document.getElementById("canvas");
+   canvas.style.backgroundColor = color;
+};
 
 function colliding(b1, b2) {
     //if potted, no collision possible
@@ -81,7 +87,7 @@ function resolveCollision(b1, b2) {
     var pos2 = ball2.position.clone();
     var delta = pos1.sub(ball2.position);
     var d = delta.length();
-    
+
     // minimum translation distance to push balls apart after intersecting
     var tmp = ((ball1.radius + ball2.radius)-d) / d;
     var mtd = delta.scale(tmp);
@@ -113,8 +119,8 @@ function resolveCollision(b1, b2) {
     var impulse = mtd.scale(i);
 
     // change in momentum
-    var newVel1 = vel1.add(impulse.scale(im1)); 
-    var newVel2 = vel2.sub(impulse.scale(im2)); 
+    var newVel1 = vel1.add(impulse.scale(im1));
+    var newVel2 = vel2.sub(impulse.scale(im2));
     ball1.velocity = newVel1;
     ball1.update();
     ball2.velocity = newVel2;
@@ -155,7 +161,7 @@ function onloadHandler()
        ctx = canvas.getContext("2d"),
        width = canvas.width,
        height = canvas.height;
-   
+
    // data structures - generate initial balls
    ballList = new BallList();
    ballList.balls = getRack();
@@ -196,7 +202,7 @@ function onloadHandler()
      ctx.fillStyle = color;
      ctx.fillText(text, x, y);
    };
-   
+
    function drawDisc(x, y, rad, color)
    {
       ctx.fillStyle = color;
@@ -249,7 +255,7 @@ function onloadHandler()
       ctx.lineTo(X_MAX/2-40, 35);
       ctx.lineTo(75,35);
       ctx.fill();
-      
+
       //top right
       ctx.beginPath();
       ctx.moveTo(X_MAX/2+20, 10);
@@ -265,7 +271,7 @@ function onloadHandler()
       ctx.lineTo(X_MAX/2-40, Y_MAX-35);
       ctx.lineTo(75,Y_MAX-35);
       ctx.fill();
-      
+
       //bottom right
       ctx.beginPath();
       ctx.moveTo(X_MAX/2+20, Y_MAX-10);
@@ -349,7 +355,7 @@ function onloadHandler()
       ctx.fill();
 
    }
-   
+
    // event handlers
    var mouseClick = function(e)
    {
@@ -368,9 +374,9 @@ function onloadHandler()
       document.getElementById('cue_velocity').value = length / 30;
    };
    canvas.addEventListener("click", mouseClick, false);
-   
+
    var offsetx = 0, offsety = 0;
-   
+
    // init main animation loop
    requestAnimFrame(loop);
    function loop()
@@ -385,13 +391,13 @@ function onloadHandler()
       } while (el = el.offsetParent);
       offsetx = offsetx - window.pageXOffset;
       offsety = offsety - window.pageYOffset;
-      
+
       ctx.save();
 
       // clear the left side of the card
       // the right hand side is already rendered with fixed text
       ctx.clearRect(0, 0, width, height);
-      
+
       // perform initial one time rendering of text etc.
       /*
       ctx.save();
@@ -402,24 +408,24 @@ function onloadHandler()
 
       drawBumpers();
       drawPockets();
-      
+
       // render each edge ball - which react to mouse movement
       ctx.globalCompositeOperation = 'darker';
       ballList.update();
       ballList.render();
-      
+
       ctx.restore();
-      
+
       requestAnimFrame(loop);
    };
-   
+
    // data structures
    function BallList()
    {
       this.mousex = this.mousey = 0;
       this.balls = [];
       this.showGhostBall = false;
-      
+
       this.update = function()
       {
 	 //collison detection
@@ -464,7 +470,7 @@ function onloadHandler()
 	    if(ball.position.y > Y_MAX-BUMPER_WIDTH-ball.radius || ball.position.y < 0+BUMPER_WIDTH+ball.radius) {
                 ball.velocity.y *= -1;
 	    }
-            
+
             ball.update();
          }
 
@@ -479,7 +485,7 @@ function onloadHandler()
              }
          }
       };
-      
+
       this.render = function()
       {
          for (var i = 0; i < this.balls.length; i++)
@@ -505,7 +511,7 @@ function onloadHandler()
 	 }
       };
    };
-   
+
    function Ball(num, color, type, x, y, radius)
    {
       this.num = num;
@@ -517,16 +523,16 @@ function onloadHandler()
       this.velocity = new Vector(0,0);
       this.friction = 0.991;
       this.potted = false;
-      
+
       this.update = function()
       {
          this.velocity.x *= this.friction;
          this.position.x += this.velocity.x;
-         
+
          this.velocity.y *= this.friction;
          this.position.y += this.velocity.y;
       };
-      
+
       this.render = function()
       {
 	 //if(this.potted) {
@@ -598,11 +604,11 @@ function onloadHandler()
 // requestAnimFrame shim
 window.requestAnimFrame = (function()
 {
-   return  window.requestAnimationFrame       || 
-           window.webkitRequestAnimationFrame || 
-           window.mozRequestAnimationFrame    || 
-           window.oRequestAnimationFrame      || 
-           window.msRequestAnimationFrame     || 
+   return  window.requestAnimationFrame       ||
+           window.webkitRequestAnimationFrame ||
+           window.mozRequestAnimationFrame    ||
+           window.oRequestAnimationFrame      ||
+           window.msRequestAnimationFrame     ||
            function(callback, element)
            {
                window.setTimeout(callback, 1000 / 60);
@@ -634,14 +640,25 @@ a:hover
 }
       </style>
    </head>
-   
+
    <body style="background-color: #aaa">
       <div class="table-container">
          <canvas id="canvas" width="1190" height="640"></canvas>
       </div>
-      x: <input type="text" id="cue_x" value="10" /> 
-      y: <input type="text" id="cue_y" value="0" /> 
-      velocity: <input type="text" id="cue_velocity" value="4" /> 
+      x: <input type="text" id="cue_x" value="10" />
+      y: <input type="text" id="cue_y" value="0" />
+      velocity: <input type="text" id="cue_velocity" value="4" />
       <input type="button" id="shoot" value="Shoot [spacebar]" onclick="shoot()" />
+      <select onchange="changeColor(this)">
+          <option value="GREEN">Green</option>
+          <option value="RED">Red</option>
+          <option value="BLUE">Blue</option>
+          <option value="YELLOW">Yellow</option>
+          <option value="WHITE">White</option>
+          <option value="PURPLE">Purple</option>
+          <option value="ORANGE">Orange</option>
+          <option value="MAROON">Maroon</option>
+          <option value="BLACK">Black</option>
+      </select>
    </body>
 </html>
