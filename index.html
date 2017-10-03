@@ -7,6 +7,16 @@
       <script>
 window.addEventListener('load', onloadHandler, false);
 
+//When document is ready add an event listener onto the #power-slider
+document.addEventListener("DOMContentLoaded", function(event) { 
+  document.getElementById("power-slider").addEventListener("change", function(){
+    //When the slider value is changes, the cue velocity also changes.
+    document.getElementById('cue_velocity').value = document.getElementById('power-slider').value;
+  });
+});
+
+
+
 var WHITE = "rgb(255,255,255)";
 var YELLOW = "rgb(238,172,78)";
 var BLUE = "rgb(0, 0, 153)";
@@ -46,8 +56,8 @@ function shoot() {
     var x = document.getElementById('cue_x').value;
     var y = document.getElementById('cue_y').value;
 
-
-    var velocity = document.getElementById('cue_velocity').value;
+    //Set velocity value to the power-slider value. This is changed on every table click or when the slider position is changed.
+    var velocity = document.getElementById('power-slider').value;
     if(velocity  > 100)
       velocity = 100;
     if(velocity < 0)
@@ -74,6 +84,8 @@ function playSound(sound){
 
   }
 }
+
+
 
 function changeColor(selectedObject) {
    var color = selectedObject.value;
@@ -403,6 +415,7 @@ function onloadHandler()
       document.getElementById('cue_x').value = newVelX;
       document.getElementById('cue_y').value = newVelY;
       document.getElementById('cue_velocity').value = length / 30;
+      document.getElementById('power-slider').value = length / 30;
    };
    canvas.addEventListener("click", mouseClick, false);
 
@@ -675,6 +688,35 @@ a:hover
 {
   text-align: right;
 }
+
+#control-area, #custom-area{
+  padding: 0px 5px 25px 5px;
+  display: flex;
+  justify-content: center;
+}
+
+#control-area div{
+  display: inline;
+  padding-right: 10px;
+}
+
+#power-slider{
+  -webkit-appearance: none;
+  width: 300px;
+  height: 20px;
+  background: linear-gradient(to right, #5DFF00, #FF4D00);
+}
+
+#power-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 25px;
+    height: 25px;
+    background: url('./images/slider_image.png');
+    background-size: 25px;
+    border-radius: 25px;
+    cursor: pointer;
+}
+
       </style>
    </head>
 
@@ -683,22 +725,43 @@ a:hover
          <canvas id="canvas" width="1190" height="640"></canvas>
       </div>
 
-      felt color: <input type="color" id="felt_color" value="#15460D" />
-      x: <input type="text" id="cue_x" value="10" />
-      y: <input type="text" id="cue_y" value="0" />
-      velocity: <input type="text" id="cue_velocity" value="4" />
-      <input type="button" id="shoot" value="Shoot [spacebar]" onclick="shoot()" />
-      <select onchange="changeColor(this)">
-          <option value="GREEN">Green</option>
-          <option value="RED">Red</option>
-          <option value="BLUE">Blue</option>
-          <option value="YELLOW">Yellow</option>
-          <option value="WHITE">White</option>
-          <option value="PURPLE">Purple</option>
-          <option value="ORANGE">Orange</option>
-          <option value="MAROON">Maroon</option>
-          <option value="BLACK">Black</option>
-      </select>
+      <div id="custom-area">
+        <div class="felt-area">
+          <span>felt color:</span>
+          <input type="color" id="felt_color" value="#15460D" />
+        </div>
+        <div class="pos-area">
+            <span>x:</span><input type="text" id="cue_x" value="10" />
+            <span>y:</span><input type="text" id="cue_y" value="0" />   
+        </div>
+        <div class="velocity-area">
+            <span>velocity:</span>
+            <input type="text" id="cue_velocity" value="4" />
+        </div>
+        <div class="cloth-color-area">
+            <select onchange="changeColor(this)">
+                <option value="GREEN">Green</option>
+                <option value="RED">Red</option>
+                <option value="BLUE">Blue</option>
+                <option value="YELLOW">Yellow</option>
+                <option value="WHITE">White</option>
+                <option value="PURPLE">Purple</option>
+                <option value="ORANGE">Orange</option>
+                <option value="MAROON">Maroon</option>
+                <option value="BLACK">Black</option>
+            </select>
+        </div>
+      </div>
+
+      <div id="control-area">
+          <div class="power-area">
+            <input type="range" min="1" max="100" value="50" id="power-slider">
+          </div>
+          <div class="shoot-area">
+              <input type="button" id="shoot" value="Shoot [spacebar]" onclick="shoot()" />
+          </div>
+      </div>
+
 
       <div id="linkDiv">
          <a id="link" href="https://github.com/sleddog/pool" target="_blank">Check me out on Github</a>
@@ -707,5 +770,4 @@ a:hover
       <!-- Play potted ball sound. Sound effect obtained from https://www.zapsplat.com -->
       <audio id="ball_potted" src="./sound/ball_potted.mp3" autostart="false" ></audio>
    </body>
-
 </html>
