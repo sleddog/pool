@@ -44,6 +44,7 @@ var RESTITUTION = 0.85;
 var ballList;
 var pottedBalls = [];
 
+
 // requestAnimFrame shim
 window.requestAnimFrame = (function()
 {
@@ -92,14 +93,30 @@ a:hover
       <div class="table-container">
          <canvas id="canvas" width="1190" height="640"></canvas>
       </div>
+
       felt color: <input type="color" id="felt_color" value="#15460D" />
       x: <input type="text" id="cue_x" value="10" />
       y: <input type="text" id="cue_y" value="0" />
       velocity: <input type="text" id="cue_velocity" value="4" />
       <input type="button" id="shoot" value="Shoot [spacebar]" onclick="shoot()" />
+      <select onchange="changeColor(this)">
+          <option value="GREEN">Green</option>
+          <option value="RED">Red</option>
+          <option value="BLUE">Blue</option>
+          <option value="YELLOW">Yellow</option>
+          <option value="WHITE">White</option>
+          <option value="PURPLE">Purple</option>
+          <option value="ORANGE">Orange</option>
+          <option value="MAROON">Maroon</option>
+          <option value="BLACK">Black</option>
+      </select>
+
       <div id="linkDiv">
          <a id="link" href="https://github.com/sleddog/pool" target="_blank">Check me out on Github</a>
       </div>
+      
+      <!-- Play potted ball sound. Sound effect obtained from https://www.zapsplat.com -->
+      <audio id="ball_potted" src="./sound/ball_potted.mp3" autostart="false" ></audio>
    </body>
 
 </html>
