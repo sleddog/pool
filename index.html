@@ -61,6 +61,20 @@ function shoot() {
     ballList.balls[0] = cue_ball;
 }
 
+
+// Function to play sound depending on what was passed through.
+//To add a sound add an audio tag in the area marked below the canvas and give it a relevant id. Add the audio into the sound folder and link to it in the audio tag.
+function playSound(sound){
+  switch(sound){
+    case 'ball_potted':
+      document.getElementById('ball_potted').play();
+      break;
+    default:
+      break;
+
+  }
+}
+
 function changeColor(selectedObject) {
    var color = selectedObject.value;
    var canvas = document.getElementById("canvas");
@@ -157,6 +171,7 @@ function potted(b) {
 
         if (distance < ball.radius + 25) {
             console.log('POTTED in pocket: '+ p + '!!!!');
+            playSound('ball_potted');
 	    return true;
         }
     }
@@ -688,6 +703,9 @@ a:hover
       <div id="linkDiv">
          <a id="link" href="https://github.com/sleddog/pool" target="_blank">Check me out on Github</a>
       </div>
+      
+      <!-- Play potted ball sound. Sound effect obtained from https://www.zapsplat.com -->
+      <audio id="ball_potted" src="./sound/ball_potted.mp3" autostart="false" ></audio>
    </body>
 
 </html>
