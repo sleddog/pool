@@ -1,0 +1,26 @@
+.table-container
+{
+   text-align: center;
+   margin-bottom: 1.2em;
+}
+#canvas
+{
+   border: 1px solid #aaa;
+   background: #42A931;
+   -moz-box-shadow: 3px 3px 8px #222;
+   -webkit-box-shadow: 3px 3px 8px #222;
+   box-shadow: 3px 3px 8px #222;
+}
+a, a:visited, a:active, a:hover
+{
+   color: #fff;
+   text-decoration: none;
+}
+a:hover
+{
+   text-decoration: underline;
+}
+#linkDiv
+{
+  text-align: right;
+}
