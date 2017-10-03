@@ -1,10 +1,27 @@
 <!DOCTYPE html>
+
+
 <html>
    <head>
       <title>Pool - by Devin Gray</title>
       <script src="mathlib-min.js"></script>
       <link rel="icon" type="image/png" href="favicon.png">
+      
       <script>
+      	
+  <!-- Popup copied from https://stackoverflow.com/questions/13335954/how-can-i-make-a-html-a-href-hyperlink-open-a-new-window-using-window-location
+  -->
+	function popup(mylink, windowname)
+  { 
+  	if (! window.focus)return true; 
+  	var href; 
+  	if (typeof(mylink) == 'string') 
+  		href=mylink; 
+  	else href=mylink.href; 
+  		window.open(href, windowname, 'width=400,height=400,scrollbars=yes'); return false; 
+ 	}
+      	
+      	
 window.addEventListener('load', onloadHandler, false);
 
 var WHITE = "rgb(255,255,255)";
@@ -703,6 +720,10 @@ a:hover
       <div id="linkDiv">
          <a id="link" href="https://github.com/sleddog/pool" target="_blank">Check me out on Github</a>
       </div>
+      
+      <div id="linkDiv">
+         <a id="how" onClick="return popup('./howtoplay.html', 'HowToPlay Pool');">How to Play</a>
+      </div>      
       
       <!-- Play potted ball sound. Sound effect obtained from https://www.zapsplat.com -->
       <audio id="ball_potted" src="./sound/ball_potted.mp3" autostart="false" ></audio>
