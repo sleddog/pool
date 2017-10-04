@@ -55,6 +55,8 @@ var RESTITUTION = 0.85;
 var ballList;
 var pottedBalls = [];
 
+var placingCue = false;
+
 function shoot() {
     var x = document.getElementById('cue_x').value;
     var y = document.getElementById('cue_y').value;
@@ -68,6 +70,7 @@ function shoot() {
     document.getElementById('cue_velocity').value = velocity;
 
     var cue_ball = ballList.balls[0];
+    cue_ball.potted = false;
     cue_ball.velocity.x = x * velocity;
     cue_ball.velocity.y = y * velocity;
     ballList.showGhostBall = false;
@@ -194,6 +197,43 @@ function potted(b) {
 	    return true;
         }
     }
+    return false;
+}
+
+function isPointInBall(x, y, ball) {
+    return x < ball.position.x + ball.radius
+        && x > ball.position.x - ball.radius
+        && y < ball.position.y + ball.radius
+        && y > ball.position.y - ball.radius;
+}
+
+//check if cue ball is colliding with other balls, the bumpers, or the pots
+function isCueBallColliding(cue_index){
+    var cue_ball = ballList.balls[cue_index];
+    //check if cue ball is colliding with other balls
+    cue_ball.potted = false;//lets the cue ball be checked for collision with other balls
+    for (var b2 = 1; b2 < ballList.balls.length; b2++) {
+        if (colliding(cue_index, b2)) {
+            cue_ball.potted = true;
+            return true;
+        }
+    }
+    cue_ball.potted = true;
+
+    //check if ball is colliding with bumpers
+    if (cue_ball.position.x > X_MAX - BUMPER_WIDTH - cue_ball.radius
+        || cue_ball.position.x < 0 + BUMPER_WIDTH + cue_ball.radius) {
+        return true;
+    }
+    if (cue_ball.position.y > Y_MAX - BUMPER_WIDTH - cue_ball.radius
+        || cue_ball.position.y < 0 + BUMPER_WIDTH + cue_ball.radius) {
+        return true;
+    }
+    //check if ball is potted
+    if (potted(cue_index)) {
+        return true;
+    }
+    //not colliding with anything
     return false;
 }
 
@@ -409,41 +449,8 @@ function onloadHandler()
    // event handlers
    var mouseClick = function(e)
    {
-       var cue_index = 0;
-       var cue_ball = ballList.balls[cue_index];
-       if(cue_ball.potted){
-           //prevent placing ball if colliding with other balls
-           cue_ball.potted = false;//lets the cue ball be checked for collision with other balls
-           for (var b2 = 1; b2 < ballList.balls.length; b2++)
-           {
-               if(colliding(cue_index, b2)) {
-                   cue_ball.potted = true;
-                   return;
-               }
-           }
-           cue_ball.potted = true;
-
-            //prevent placing ball if colliding with bumpers
-           if(cue_ball.position.x > X_MAX-BUMPER_WIDTH-cue_ball.radius
-               || cue_ball.position.x < 0+BUMPER_WIDTH+cue_ball.radius) {
-               return;
-           }
-           if(cue_ball.position.y > Y_MAX-BUMPER_WIDTH-cue_ball.radius
-               || cue_ball.position.y < 0+BUMPER_WIDTH+cue_ball.radius) {
-               return;
-           }
-            //prevent placing ball if potted
-           if(potted(cue_index)) {
-               return;
-           }
-
-           //place ball
-           cue_ball.position.x = e.clientX - offsetx;
-           cue_ball.position.y = e.clientY - offsety;
-           cue_ball.potted = false;
-
-           console.log("Cue placed")
-       }else {
+       var cue_ball = ballList.balls[0];
+       if(!placingCue){
            ballList.mousex = e.clientX - offsetx;
            ballList.mousey = e.clientY - offsety;
            ballList.showGhostBall = !ballList.showGhostBall;
@@ -451,6 +458,10 @@ function onloadHandler()
            var dx = ballList.mousex - (cue_ball.position.x);
            var dy = ballList.mousey - (cue_ball.position.y);
            var length = Math.sqrt(dx * dx + dy * dy);
+           //prevent a divide by zero if clicking at the same exact point the cue ball is at
+           if(length == 0){
+               return;
+           }
            var newVelX = dx / length;
            var newVelY = dy / length;
            document.getElementById('cue_x').value = newVelX;
@@ -463,15 +474,61 @@ function onloadHandler()
    var mouseMove = function(e)
    {
        var cue_ball = ballList.balls[0];
-       //make cue ball follow mouse if potted
        if(cue_ball.potted){
+           if(placingCue){
+               //make cue ball follow mouse if potted and currently placing the cue ball
+               cue_ball.position.x = e.clientX - offsetx;
+               cue_ball.position.y = e.clientY - offsety;
+           }else{
+               //if we're not placing the cue ball
+               //change the mouse cursor depending on if we're moused over it or not
+               if(isPointInBall(e.clientX - offsetx, e.clientY - offsety, cue_ball)){
+                   canvas.style.cursor = "pointer";
+               }else{
+                   canvas.style.cursor = "default";
+               }
+           }
+       }
+   };
+
+   var mouseDown = function(e){
+       var cue_index = 0;
+       var cue_ball = ballList.balls[cue_index];
+       if(cue_ball.potted){
+           //prevent ghost ball showing up while dragging
+           ballList.showGhostBall = false;
+
+           var mouseX = e.clientX - offsetx;
+           var mouseY = e.clientY - offsety;
+           //check if clicking cue ball
+           if(isPointInBall(mouseX, mouseY, cue_ball)){
+               placingCue = true;
+           }
+       }
+   };
+
+   var mouseUp = function (e) {
+       var cue_index = 0;
+       var cue_ball = ballList.balls[cue_index];
+       if(cue_ball.potted && placingCue) {
+           //prevent placing ball if colliding with something
+           if(isCueBallColliding(cue_index)){
+               return;
+           }
+
+           //place ball
            cue_ball.position.x = e.clientX - offsetx;
            cue_ball.position.y = e.clientY - offsety;
+           placingCue = false;
+
+           canvas.style.cursor = "default";
        }
    };
 
    canvas.addEventListener("click", mouseClick, false);
    canvas.addEventListener("mousemove", mouseMove, false);
+   canvas.addEventListener("mousedown", mouseDown, false);
+   canvas.addEventListener("mouseup", mouseUp, false);
 
    var offsetx = 0, offsety = 0;
 
@@ -539,6 +596,13 @@ function onloadHandler()
                  ball.velocity.x = 0;
                  ball.velocity.y = 0;
                  ball.potted = true;
+                 ball.position.x = 200;
+                 ball.position.y = 320;
+                 //if there's a ball already at the kitchen position
+                 //force the user to place the cue ball
+                 if(isCueBallColliding(0)){
+                     placingCue = true;
+                 }
              }
 		     continue;
 		 }
