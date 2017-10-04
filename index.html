@@ -24,6 +24,8 @@ var GREY = "rgb(170,170,170)";
 var DARK_GREY = "rgb(200,200,200)";
 
 var FELT_COLOR = "rgb(21, 70, 13)";
+var STICK_COLOR = "rgb(183,167,133)";
+
 var BUMPER_WIDTH = 25;
 var BALL_RADIUS = 20;
 
@@ -541,6 +543,43 @@ function onloadHandler()
 	     ctx.moveTo(this.balls[0].position.x, this.balls[0].position.y);
 	     ctx.lineTo(this.mousex, this.mousey);
 	     ctx.stroke();
+	 }
+
+	 if (Math.abs(this.balls[0].velocity.x) < 0.01 && Math.abs(this.balls[0].velocity.y) < 0.01) {
+	 	var x = this.balls[0].position.x - this.mousex,
+		    y = this.balls[0].position.y - this.mousey;
+
+		var norm_x = x / Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
+		var norm_y = y / Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
+
+		ctx.save();
+		ctx.translate(this.balls[0].position.x + (norm_x * (BALL_RADIUS + 10)), this.balls[0].position.y + (norm_y * (BALL_RADIUS + 10)));
+
+		ctx.beginPath();
+		ctx.lineWidth = 10;
+		ctx.strokeStyle = STICK_COLOR;
+		ctx.moveTo(0, 0);
+		ctx.lineTo(norm_x * 1000, norm_y * 1000);
+		ctx.stroke();
+		ctx.closePath();
+
+		ctx.beginPath();
+		ctx.lineWidth = 10;
+		ctx.strokeStyle = WHITE;
+		ctx.moveTo(0, 0);
+		ctx.lineTo(norm_x * 20, norm_y * 20);
+		ctx.stroke(); 
+		ctx.closePath();
+
+		ctx.beginPath();
+		ctx.lineWidth = 10;
+		ctx.strokeStyle = BLACK;
+		ctx.moveTo(0, 0);
+		ctx.lineTo(norm_x * 10, norm_y * 10);
+		ctx.stroke(); 
+		ctx.closePath();
+
+		ctx.restore();
 	 }
       };
    };
