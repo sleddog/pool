@@ -7,6 +7,16 @@
       <script>
 window.addEventListener('load', onloadHandler, false);
 
+//When document is ready add an event listener onto the #power-slider
+document.addEventListener("DOMContentLoaded", function(event) { 
+  document.getElementById("power-slider").addEventListener("change", function(){
+    //When the slider value is changes, the cue velocity also changes.
+    document.getElementById('cue_velocity').value = document.getElementById('power-slider').value;
+  });
+});
+
+
+
 var WHITE = "rgb(255,255,255)";
 var YELLOW = "rgb(238,172,78)";
 var BLUE = "rgb(0, 0, 153)";
@@ -24,6 +34,8 @@ var GREY = "rgb(170,170,170)";
 var DARK_GREY = "rgb(200,200,200)";
 
 var FELT_COLOR = "rgb(21, 70, 13)";
+var STICK_COLOR = "rgb(183,167,133)";
+
 var BUMPER_WIDTH = 25;
 var BALL_RADIUS = 20;
 
@@ -33,6 +45,7 @@ var STRIPE = 2;
 
 var X_MAX = 1120;
 var Y_MAX = 640;
+var SHOW_STICK_AT = 0.03;
 
 //for physics folks
 var BALL_MASS = 1;
@@ -46,8 +59,8 @@ function shoot() {
     var x = document.getElementById('cue_x').value;
     var y = document.getElementById('cue_y').value;
 
-
-    var velocity = document.getElementById('cue_velocity').value;
+    //Set velocity value to the power-slider value. This is changed on every table click or when the slider position is changed.
+    var velocity = document.getElementById('power-slider').value;
     if(velocity  > 100)
       velocity = 100;
     if(velocity < 0)
@@ -74,17 +87,17 @@ function playSound(sound){
 
   }
 }
-
-          
+        
 function colliding(b1, b2) {
-    //if potted, no collision possible
-    if(b1.potted || b2.potted) {
-        return false;
-    }
 
     //compare if this ball "hits" the other
     var ball1 = ballList.balls[b1];
     var ball2 = ballList.balls[b2];
+
+    //if potted, no collision possible
+    if(ball1.potted || ball2.potted) {
+        return false;
+    }
 
     var dx = ball1.position.x - ball2.position.x;
     var dy = ball1.position.y - ball2.position.y;
@@ -165,8 +178,11 @@ function potted(b) {
         var distance = Math.sqrt(dx * dx + dy * dy);
 
         if (distance < ball.radius + 25) {
-            console.log('POTTED in pocket: '+ p + '!!!!');
-            playSound('ball_potted');
+            //prevent cue ball from repeating sound after scratching
+            if(!ball.potted){
+                console.log('POTTED in pocket: '+ p + '!!!!');
+                playSound('ball_potted');
+            }
 	    return true;
         }
     }
@@ -222,7 +238,7 @@ function onloadHandler()
    {
      
        var canvas = document.getElementById("canvas");
-   canvas.style.backgroundColor = this.value;
+       canvas.style.backgroundColor = this.value;
    }
 
    function drawText(x, y, text, color)
@@ -387,21 +403,69 @@ function onloadHandler()
    // event handlers
    var mouseClick = function(e)
    {
-      ballList.mousex = e.clientX - offsetx;
-      ballList.mousey = e.clientY - offsety;
-      ballList.showGhostBall = !ballList.showGhostBall;
-      //normalize ghostball
-      var cue_ball = ballList.balls[0];
-      var dx = ballList.mousex - (cue_ball.position.x);
-      var dy = ballList.mousey - (cue_ball.position.y);
-      var length = Math.sqrt(dx * dx + dy * dy);
-      var newVelX = dx / length;
-      var newVelY = dy / length;
-      document.getElementById('cue_x').value = newVelX;
-      document.getElementById('cue_y').value = newVelY;
-      document.getElementById('cue_velocity').value = length / 30;
+       var cue_index = 0;
+       var cue_ball = ballList.balls[cue_index];
+       if(cue_ball.potted){
+           //prevent placing ball if colliding with other balls
+           cue_ball.potted = false;//lets the cue ball be checked for collision with other balls
+           for (var b2 = 1; b2 < ballList.balls.length; b2++)
+           {
+               if(colliding(cue_index, b2)) {
+                   cue_ball.potted = true;
+                   return;
+               }
+           }
+           cue_ball.potted = true;
+
+            //prevent placing ball if colliding with bumpers
+           if(cue_ball.position.x > X_MAX-BUMPER_WIDTH-cue_ball.radius
+               || cue_ball.position.x < 0+BUMPER_WIDTH+cue_ball.radius) {
+               return;
+           }
+           if(cue_ball.position.y > Y_MAX-BUMPER_WIDTH-cue_ball.radius
+               || cue_ball.position.y < 0+BUMPER_WIDTH+cue_ball.radius) {
+               return;
+           }
+            //prevent placing ball if potted
+           if(potted(cue_index)) {
+               return;
+           }
+
+           //place ball
+           cue_ball.position.x = e.clientX - offsetx;
+           cue_ball.position.y = e.clientY - offsety;
+           cue_ball.potted = false;
+
+           console.log("Cue placed")
+       }else {
+           ballList.mousex = e.clientX - offsetx;
+           ballList.mousey = e.clientY - offsety;
+           ballList.showGhostBall = !ballList.showGhostBall;
+           //normalize ghostball
+           var dx = ballList.mousex - (cue_ball.position.x);
+           var dy = ballList.mousey - (cue_ball.position.y);
+           var length = Math.sqrt(dx * dx + dy * dy);
+           var newVelX = dx / length;
+           var newVelY = dy / length;
+           document.getElementById('cue_x').value = newVelX;
+           document.getElementById('cue_y').value = newVelY;
+           document.getElementById('cue_velocity').value = length / 30;
+           document.getElementById('power-slider').value = length / 30;
+       }
    };
+
+   var mouseMove = function(e)
+   {
+       var cue_ball = ballList.balls[0];
+       //make cue ball follow mouse if potted
+       if(cue_ball.potted){
+           cue_ball.position.x = e.clientX - offsetx;
+           cue_ball.position.y = e.clientY - offsety;
+       }
+   };
+
    canvas.addEventListener("click", mouseClick, false);
+   canvas.addEventListener("mousemove", mouseMove, false);
 
    var offsetx = 0, offsety = 0;
 
@@ -450,7 +514,8 @@ function onloadHandler()
    // data structures
    function BallList()
    {
-      this.mousex = this.mousey = 0;
+      this.mousex = ctx.canvas.clientWidth/2;
+      this.mousey = ctx.canvas.clientHeight/2;;
       this.balls = [];
       this.showGhostBall = false;
 
@@ -463,12 +528,12 @@ function onloadHandler()
 	     if(potted(i)) {
 	         ball = this.balls[i];
 		 if(ball.type == CUE) {
-		     console.log("SCRATCH - auto respawning...");
-		     ball.velocity.x = 0;
-         	     ball.velocity.y = 0;
-         	     ball.position.x = 200;
-		     ball.position.y = 320;
-		     ball.potted = false;
+		     if(!ball.potted){
+                 console.log("SCRATCH - placing cue...");
+                 ball.velocity.x = 0;
+                 ball.velocity.y = 0;
+                 ball.potted = true;
+             }
 		     continue;
 		 }
 
@@ -538,6 +603,43 @@ function onloadHandler()
 	     ctx.moveTo(this.balls[0].position.x, this.balls[0].position.y);
 	     ctx.lineTo(this.mousex, this.mousey);
 	     ctx.stroke();
+	 }
+
+	 if (Math.abs(this.balls[0].velocity.x) < SHOW_STICK_AT && Math.abs(this.balls[0].velocity.y) < SHOW_STICK_AT) {
+	 	var x = this.balls[0].position.x - this.mousex,
+		    y = this.balls[0].position.y - this.mousey;
+
+		var norm_x = x / Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
+		var norm_y = y / Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
+
+		ctx.save();
+		ctx.translate(this.balls[0].position.x + (norm_x * (BALL_RADIUS + 10)), this.balls[0].position.y + (norm_y * (BALL_RADIUS + 10)));
+
+		ctx.beginPath();
+		ctx.lineWidth = 10;
+		ctx.strokeStyle = STICK_COLOR;
+		ctx.moveTo(0, 0);
+		ctx.lineTo(norm_x * 1000, norm_y * 1000);
+		ctx.stroke();
+		ctx.closePath();
+
+		ctx.beginPath();
+		ctx.lineWidth = 10;
+		ctx.strokeStyle = WHITE;
+		ctx.moveTo(0, 0);
+		ctx.lineTo(norm_x * 20, norm_y * 20);
+		ctx.stroke(); 
+		ctx.closePath();
+
+		ctx.beginPath();
+		ctx.lineWidth = 10;
+		ctx.strokeStyle = BLACK;
+		ctx.moveTo(0, 0);
+		ctx.lineTo(norm_x * 10, norm_y * 10);
+		ctx.stroke(); 
+		ctx.closePath();
+
+		ctx.restore();
 	 }
       };
    };
@@ -672,6 +774,36 @@ a:hover
 {
   text-align: right;
 }
+
+#control-area, #custom-area{
+  padding: 0px 5px 25px 5px;
+  display: flex;
+  justify-content: center;
+}
+
+#control-area div{
+  display: inline;
+  padding-right: 10px;
+}
+
+#power-slider{
+  -webkit-appearance: none;
+  width: 300px;
+  height: 20px;
+  background: linear-gradient(to right, #5DFF00, #FF4D00);
+}
+
+#power-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 25px;
+    height: 25px;
+    background: red;
+    border: 10px solid white;
+    background-size: 25px;
+    border-radius: 25px;
+    cursor: pointer;
+}
+
       </style>
    </head>
 
@@ -686,6 +818,31 @@ a:hover
       velocity: <input type="text" id="cue_velocity" value="4" />
       <input type="button" id="shoot" value="Shoot [spacebar]" onclick="shoot()" />
     
+      <div id="custom-area">
+        <div class="felt-area">
+          <span>felt color:</span>
+          <input type="color" id="felt_color" value="#15460D" />
+        </div>
+        <div class="pos-area">
+            <span>x:</span><input type="text" id="cue_x" value="10" />
+            <span>y:</span><input type="text" id="cue_y" value="0" />   
+        </div>
+        <div class="velocity-area">
+            <span>velocity:</span>
+            <input type="text" id="cue_velocity" value="4" />
+        </div>
+        
+      </div>
+
+      <div id="control-area">
+          <div class="power-area">
+            <input type="range" min="1" max="100" value="50" id="power-slider">
+          </div>
+          <div class="shoot-area">
+              <input type="button" id="shoot" value="Shoot [spacebar]" onclick="shoot()" />
+          </div>
+      </div>
+
       <div id="linkDiv">
          <a id="link" href="https://github.com/sleddog/pool" target="_blank">Check me out on Github</a>
       </div>
@@ -693,5 +850,4 @@ a:hover
       <!-- Play potted ball sound. Sound effect obtained from https://www.zapsplat.com -->
       <audio id="ball_potted" src="./sound/ball_potted.mp3" autostart="false" ></audio>
    </body>
-
 </html>
