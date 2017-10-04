@@ -84,14 +84,15 @@ function changeColor(selectedObject) {
 };
 
 function colliding(b1, b2) {
-    //if potted, no collision possible
-    if(b1.potted || b2.potted) {
-        return false;
-    }
 
     //compare if this ball "hits" the other
     var ball1 = ballList.balls[b1];
     var ball2 = ballList.balls[b2];
+
+    //if potted, no collision possible
+    if(ball1.potted || ball2.potted) {
+        return false;
+    }
 
     var dx = ball1.position.x - ball2.position.x;
     var dy = ball1.position.y - ball2.position.y;
@@ -172,8 +173,11 @@ function potted(b) {
         var distance = Math.sqrt(dx * dx + dy * dy);
 
         if (distance < ball.radius + 25) {
-            console.log('POTTED in pocket: '+ p + '!!!!');
-            playSound('ball_potted');
+            //prevent cue ball from repeating sound after scratching
+            if(!ball.potted){
+                console.log('POTTED in pocket: '+ p + '!!!!');
+                playSound('ball_potted');
+            }
 	    return true;
         }
     }
@@ -392,21 +396,68 @@ function onloadHandler()
    // event handlers
    var mouseClick = function(e)
    {
-      ballList.mousex = e.clientX - offsetx;
-      ballList.mousey = e.clientY - offsety;
-      ballList.showGhostBall = !ballList.showGhostBall;
-      //normalize ghostball
-      var cue_ball = ballList.balls[0];
-      var dx = ballList.mousex - (cue_ball.position.x);
-      var dy = ballList.mousey - (cue_ball.position.y);
-      var length = Math.sqrt(dx * dx + dy * dy);
-      var newVelX = dx / length;
-      var newVelY = dy / length;
-      document.getElementById('cue_x').value = newVelX;
-      document.getElementById('cue_y').value = newVelY;
-      document.getElementById('cue_velocity').value = length / 30;
+       var cue_index = 0;
+       var cue_ball = ballList.balls[cue_index];
+       if(cue_ball.potted){
+           //prevent placing ball if colliding with other balls
+           cue_ball.potted = false;//lets the cue ball be checked for collision with other balls
+           for (var b2 = 1; b2 < ballList.balls.length; b2++)
+           {
+               if(colliding(cue_index, b2)) {
+                   cue_ball.potted = true;
+                   return;
+               }
+           }
+           cue_ball.potted = true;
+
+            //prevent placing ball if colliding with bumpers
+           if(cue_ball.position.x > X_MAX-BUMPER_WIDTH-cue_ball.radius
+               || cue_ball.position.x < 0+BUMPER_WIDTH+cue_ball.radius) {
+               return;
+           }
+           if(cue_ball.position.y > Y_MAX-BUMPER_WIDTH-cue_ball.radius
+               || cue_ball.position.y < 0+BUMPER_WIDTH+cue_ball.radius) {
+               return;
+           }
+            //prevent placing ball if potted
+           if(potted(cue_index)) {
+               return;
+           }
+
+           //place ball
+           cue_ball.position.x = e.clientX - offsetx;
+           cue_ball.position.y = e.clientY - offsety;
+           cue_ball.potted = false;
+
+           console.log("Cue placed")
+       }else {
+           ballList.mousex = e.clientX - offsetx;
+           ballList.mousey = e.clientY - offsety;
+           ballList.showGhostBall = !ballList.showGhostBall;
+           //normalize ghostball
+           var dx = ballList.mousex - (cue_ball.position.x);
+           var dy = ballList.mousey - (cue_ball.position.y);
+           var length = Math.sqrt(dx * dx + dy * dy);
+           var newVelX = dx / length;
+           var newVelY = dy / length;
+           document.getElementById('cue_x').value = newVelX;
+           document.getElementById('cue_y').value = newVelY;
+           document.getElementById('cue_velocity').value = length / 30;
+       }
    };
+
+   var mouseMove = function(e)
+   {
+       var cue_ball = ballList.balls[0];
+       //make cue ball follow mouse if potted
+       if(cue_ball.potted){
+           cue_ball.position.x = e.clientX - offsetx;
+           cue_ball.position.y = e.clientY - offsety;
+       }
+   };
+
    canvas.addEventListener("click", mouseClick, false);
+   canvas.addEventListener("mousemove", mouseMove, false);
 
    var offsetx = 0, offsety = 0;
 
@@ -468,12 +519,12 @@ function onloadHandler()
 	     if(potted(i)) {
 	         ball = this.balls[i];
 		 if(ball.type == CUE) {
-		     console.log("SCRATCH - auto respawning...");
-		     ball.velocity.x = 0;
-         	     ball.velocity.y = 0;
-         	     ball.position.x = 200;
-		     ball.position.y = 320;
-		     ball.potted = false;
+		     if(!ball.potted){
+                 console.log("SCRATCH - placing cue...");
+                 ball.velocity.x = 0;
+                 ball.velocity.y = 0;
+                 ball.potted = true;
+             }
 		     continue;
 		 }
 
