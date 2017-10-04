@@ -45,6 +45,7 @@ var STRIPE = 2;
 
 var X_MAX = 1120;
 var Y_MAX = 640;
+var SHOW_STICK_AT = 0.03;
 
 //for physics folks
 var BALL_MASS = 1;
@@ -519,7 +520,8 @@ function onloadHandler()
    // data structures
    function BallList()
    {
-      this.mousex = this.mousey = 0;
+      this.mousex = ctx.canvas.clientWidth/2;
+      this.mousey = ctx.canvas.clientHeight/2;;
       this.balls = [];
       this.showGhostBall = false;
 
@@ -609,7 +611,7 @@ function onloadHandler()
 	     ctx.stroke();
 	 }
 
-	 if (Math.abs(this.balls[0].velocity.x) < 0.01 && Math.abs(this.balls[0].velocity.y) < 0.01) {
+	 if (Math.abs(this.balls[0].velocity.x) < SHOW_STICK_AT && Math.abs(this.balls[0].velocity.y) < SHOW_STICK_AT) {
 	 	var x = this.balls[0].position.x - this.mousex,
 		    y = this.balls[0].position.y - this.mousey;
 
