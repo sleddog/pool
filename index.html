@@ -675,7 +675,8 @@ function onloadHandler()
 	     ctx.stroke();
 	 }
 
-	 if (Math.abs(this.balls[0].velocity.x) < SHOW_STICK_AT && Math.abs(this.balls[0].velocity.y) < SHOW_STICK_AT) {
+	 if (Math.abs(this.balls[0].velocity.x) < SHOW_STICK_AT && Math.abs(this.balls[0].velocity.y) < SHOW_STICK_AT
+         && !placingCue) {
 	 	var x = this.balls[0].position.x - this.mousex,
 		    y = this.balls[0].position.y - this.mousey;
 
