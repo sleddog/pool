@@ -55,6 +55,8 @@ var RESTITUTION = 0.85;
 var ballList;
 var pottedBalls = [];
 
+var maxObservedSpeed = 0;
+
 var placingCue = false;
 
 function shoot() {
@@ -78,17 +80,25 @@ function shoot() {
 }
 
 
-// Function to play sound depending on what was passed through.
+// Play sound by <audio> element ID.
 //To add a sound add an audio tag in the area marked below the canvas and give it a relevant id. Add the audio into the sound folder and link to it in the audio tag.
-function playSound(sound){
-  switch(sound){
-    case 'ball_potted':
-      document.getElementById('ball_potted').play();
-      break;
-    default:
-      break;
+// Vol parameter is optional, omit or pass undefined to play at full volume
+function playSound(sound, vol = 1.0){
+    var soundElement = document.getElementById(sound);
+    if (!soundElement) {
+        console.log("playSound(): Invalid element ID", sound);
+        return;
+    }
 
-  }
+    // Clamp volume, don't want slow-moving balls to be completely silent
+    if (vol < 0.25) {
+        vol = 0.25;
+    } else if (vol > 1.0) {
+        vol = 1.0;
+    }
+    console.log("Playing sound " + sound + " at volume " + vol);
+    soundElement.volume = vol;
+    soundElement.play();
 }
         
 function colliding(b1, b2) {
@@ -184,7 +194,8 @@ function potted(b) {
             //prevent cue ball from repeating sound after scratching
             if(!ball.potted){
                 console.log('POTTED in pocket: '+ p + '!!!!');
-                playSound('ball_potted');
+                // pass 0.0-1.0 normalized speed as volume
+                playSound('ball_potted', ball.velocity.length()/100);
             }
 	    return true;
         }
