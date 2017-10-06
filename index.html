@@ -244,6 +244,7 @@ function onloadHandler()
        ctx = canvas.getContext("2d"),
        width = canvas.width,
        height = canvas.height;
+    var keyPress = false;
 
    document.getElementById('felt_color').onchange = getFeltColor;
 
@@ -795,12 +796,19 @@ function onloadHandler()
    };
 
    document.addEventListener("keydown", keyDownEvent, false);
+   document.addEventListener("keyup", keyUpEvent, false);
 
    function keyDownEvent(e) {
        var keyCode = e.keyCode;
-       if(keyCode == 32) { //space bar
+       if(keyCode == 32 && !keyPress) { //space bar
+
+       		keyPress = true
            shoot();
        }
+   }
+
+   function keyUpEvent(e){
+   	keyPress = false; 
    }
 }
 
