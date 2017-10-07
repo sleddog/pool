@@ -3,6 +3,7 @@
    <head>
       <title>Pool - by Devin Gray</title>
       <script src="mathlib-min.js"></script>
+      <script src="dat.gui.min.js"></script>
       <link rel="icon" type="image/png" href="favicon.png">
       <script>
 window.addEventListener('load', onloadHandler, false);
@@ -33,23 +34,12 @@ var GHOST_WHITE = "rgba(255,255,255, 0.3)";
 var GREY = "rgb(170,170,170)";
 var DARK_GREY = "rgb(200,200,200)";
 
-var FELT_COLOR = "rgb(21, 70, 13)";
-var STICK_COLOR = "rgb(183,167,133)";
-
-var BUMPER_WIDTH = 25;
-var BALL_RADIUS = 20;
-
 var CUE = 0;
 var SOLID = 1;
 var STRIPE = 2;
 
 var X_MAX = 1120;
 var Y_MAX = 640;
-var SHOW_STICK_AT = 0.03;
-
-//for physics folks
-var BALL_MASS = 1;
-var RESTITUTION = 0.85;
 
 //all the balls on the table
 var ballList;
@@ -57,16 +47,35 @@ var pottedBalls = [];
 
 var placingCue = false;
 
+var PREFS = {
+    bumperColor: "rgb(21, 70, 13)",
+    feltColor: "rgb(66, 169, 49)",
+    stickColor: "rgb(183,167,133)",
+    rackX: 800,
+    rackY: 320,
+    cueX: 200,
+    cueY: 320,
+    
+    minVelocity: 0,
+    maxVelocity: 100,
+    ballRadius: 20,
+    ballMass: parseFloat(1),
+    ballFriction: 0.991,
+    bumperWidth: 25,
+    showStickAt: 0.03,
+    restitution: 0.85
+}
+
 function shoot() {
     var x = document.getElementById('cue_x').value;
     var y = document.getElementById('cue_y').value;
 
     //Set velocity value to the power-slider value. This is changed on every table click or when the slider position is changed.
     var velocity = document.getElementById('power-slider').value;
-    if(velocity  > 100)
-      velocity = 100;
-    if(velocity < 0)
-      velocity = 0;
+    if(velocity > PREFS.maxVelocity)
+      velocity = PREFS.maxVelocity;
+    if(velocity < PREFS.minVelocity)
+      velocity = PREFS.minVelocity;
     document.getElementById('cue_velocity').value = velocity;
 
     var cue_ball = ballList.balls[0];
@@ -136,8 +145,8 @@ function resolveCollision(b1, b2) {
 
     // resolve intersection --
     // inverse mass quantities
-    var im1 = 1 / BALL_MASS;
-    var im2 = 1 / BALL_MASS;
+    var im1 = 1 / PREFS.ballMass;
+    var im2 = 1 / PREFS.ballMass;
 
     // push-pull them apart based off their mass
     //TODO may need...
@@ -157,7 +166,7 @@ function resolveCollision(b1, b2) {
     }
 
     // collision impulse
-    var i = (-(1.0 + RESTITUTION) * vn) / (im1 + im2);
+    var i = (-(1.0 + PREFS.restitution) * vn) / (im1 + im2);
     var impulse = mtd.scale(i);
 
     // change in momentum
@@ -193,7 +202,7 @@ function potted(b) {
             if(!ball.potted){
                 console.log('POTTED in pocket: '+ p + '!!!!');
                 // pass 0.0-1.0 normalized speed as volume
-                playSound('ball_potted', ball.velocity.length()/100);
+                playSound('ball_potted', ball.velocity.length()/PREFS.maxVelocity);
             }
 	    return true;
         }
@@ -222,12 +231,12 @@ function isCueBallColliding(cue_index){
     cue_ball.potted = true;
 
     //check if ball is colliding with bumpers
-    if (cue_ball.position.x > X_MAX - BUMPER_WIDTH - cue_ball.radius
-        || cue_ball.position.x < 0 + BUMPER_WIDTH + cue_ball.radius) {
+    if (cue_ball.position.x > X_MAX - PREFS.bumperWidth - cue_ball.radius
+        || cue_ball.position.x < 0 + PREFS.bumperWidth + cue_ball.radius) {
         return true;
     }
-    if (cue_ball.position.y > Y_MAX - BUMPER_WIDTH - cue_ball.radius
-        || cue_ball.position.y < 0 + BUMPER_WIDTH + cue_ball.radius) {
+    if (cue_ball.position.y > Y_MAX - PREFS.bumperWidth - cue_ball.radius
+        || cue_ball.position.y < 0 + PREFS.bumperWidth + cue_ball.radius) {
         return true;
     }
     //check if ball is potted
@@ -239,7 +248,7 @@ function isCueBallColliding(cue_index){
 }
 
 function onloadHandler()
-{
+{   
    // get the canvas DOM element
    var canvas = document.getElementById('canvas'),
        ctx = canvas.getContext("2d"),
@@ -247,20 +256,57 @@ function onloadHandler()
        height = canvas.height;
     var keyPress = false;
 
-   document.getElementById('felt_color').onchange = getFeltColor;
-
    // data structures - generate initial balls
    ballList = new BallList();
    ballList.balls = getRack();
+   
+   var gui = new dat.GUI();
+    
+   var appearance = gui.addFolder('Appearance');
+   var physics = gui.addFolder('Physics');
+
+   appearance.addColor(PREFS, 'bumperColor');
+   appearance.addColor(PREFS, 'feltColor').onChange(function(color) {
+       canvas.style.backgroundColor = color;
+   });
+   appearance.addColor(PREFS, 'stickColor');
+   appearance.add(PREFS, 'rackX', 0, X_MAX).onChange(function(color) {
+       ballList.balls = getRack();
+   });
+   appearance.add(PREFS, 'rackY', 0, Y_MAX).onChange(function(color) {
+       ballList.balls = getRack();
+   });
+   appearance.add(PREFS, 'cueX', 0, X_MAX).onChange(function(color) {
+       ballList.balls = getRack();
+   });
+   appearance.add(PREFS, 'cueY', 0, Y_MAX).onChange(function(color) {
+       ballList.balls = getRack();
+   });
+   
+   physics.add(PREFS, 'minVelocity', 0, 500);
+   physics.add(PREFS, 'maxVelocity', 0, 500);
+   physics.add(PREFS, 'ballRadius', 10, 30).onChange(function() {
+       ballList.balls = getRack();
+   });
+   physics.add(PREFS, 'ballMass', 0, 5);
+   physics.add(PREFS, 'ballFriction', 0, 5).onChange(function() {
+       ballList.balls = getRack();
+   });
+   physics.add(PREFS, 'bumperWidth', 0, 75);
+   physics.add(PREFS, 'showStickAt', 0, 5);
+   physics.add(PREFS, 'restitution', 0, 5);
+   
+   appearance.open();
+   physics.open();
 
    function getRack() {
-       var radius = BALL_RADIUS;
+       var radius = PREFS.ballRadius;
        var xFactor = 1.73205;
-       var x = 800;
-       var y = 320;
+       var x = PREFS.rackX;
+       var y = PREFS.rackY;
 
        return [
-          new Ball(0, WHITE, CUE, 200, y,  radius),
+          new Ball(0, WHITE, CUE, PREFS.cueX, PREFS.cueY,  radius),
 
           new Ball(1, YELLOW, SOLID, x-4, y,  radius),
 
@@ -283,13 +329,6 @@ function onloadHandler()
           new Ball(15, MAROON, STRIPE, x+4*radius*xFactor, y+radius*4,  radius),
        ];
     }
-
-   function getFeltColor()
-   {
-     
-       var canvas = document.getElementById("canvas");
-       canvas.style.backgroundColor = this.value;
-   }
 
    function drawText(x, y, text, color)
    {
@@ -341,7 +380,7 @@ function onloadHandler()
 
    function drawBumpers() {
       //green bumpers
-      ctx.fillStyle = FELT_COLOR;
+      ctx.fillStyle = PREFS.bumperColor;
       //top left
       ctx.beginPath();
       ctx.moveTo(50,10);
@@ -600,8 +639,8 @@ function onloadHandler()
                  ball.velocity.x = 0;
                  ball.velocity.y = 0;
                  ball.potted = true;
-                 ball.position.x = 200;
-                 ball.position.y = 320;
+                 ball.position.x = PREFS.cueX;
+                 ball.position.y = PREFS.cueY;
                  //if there's a ball already at the kitchen position
                  //force the user to place the cue ball
                  if(isCueBallColliding(0)){
@@ -633,10 +672,10 @@ function onloadHandler()
                 continue;
 	    }
 
-	    if(ball.position.x > X_MAX-BUMPER_WIDTH-ball.radius || ball.position.x < 0+BUMPER_WIDTH+ball.radius) {
+	    if(ball.position.x > X_MAX-PREFS.bumperWidth-ball.radius || ball.position.x < 0+PREFS.bumperWidth+ball.radius) {
                 ball.velocity.x *= -1;
 	    }
-	    if(ball.position.y > Y_MAX-BUMPER_WIDTH-ball.radius || ball.position.y < 0+BUMPER_WIDTH+ball.radius) {
+	    if(ball.position.y > Y_MAX-PREFS.bumperWidth-ball.radius || ball.position.y < 0+PREFS.bumperWidth+ball.radius) {
                 ball.velocity.y *= -1;
 	    }
 
@@ -670,7 +709,7 @@ function onloadHandler()
              ctx.strokeStyle = GHOST_WHITE;
 	     ctx.lineWidth = 1;
              ctx.beginPath();
-             ctx.arc(this.mousex, this.mousey, BALL_RADIUS, 0, TWOPI, true);
+             ctx.arc(this.mousex, this.mousey, PREFS.ballRadius, 0, TWOPI, true);
              ctx.fill();
 	     //draw the ghost line
 	     ctx.beginPath();
@@ -679,7 +718,7 @@ function onloadHandler()
 	     ctx.stroke();
 	 }
 
-	 if (Math.abs(this.balls[0].velocity.x) < SHOW_STICK_AT && Math.abs(this.balls[0].velocity.y) < SHOW_STICK_AT
+	 if (Math.abs(this.balls[0].velocity.x) < PREFS.showStickAt && Math.abs(this.balls[0].velocity.y) < PREFS.showStickAt
          && !placingCue) {
 	 	var x = this.balls[0].position.x - this.mousex,
 		    y = this.balls[0].position.y - this.mousey;
@@ -688,11 +727,11 @@ function onloadHandler()
 		var norm_y = y / Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
 
 		ctx.save();
-		ctx.translate(this.balls[0].position.x + (norm_x * (BALL_RADIUS + 10)), this.balls[0].position.y + (norm_y * (BALL_RADIUS + 10)));
+		ctx.translate(this.balls[0].position.x + (norm_x * (PREFS.ballRadius + 10)), this.balls[0].position.y + (norm_y * (PREFS.ballRadius + 10)));
 
 		ctx.beginPath();
 		ctx.lineWidth = 10;
-		ctx.strokeStyle = STICK_COLOR;
+		ctx.strokeStyle = PREFS.stickColor;
 		ctx.moveTo(0, 0);
 		ctx.lineTo(norm_x * 1000, norm_y * 1000);
 		ctx.stroke();
@@ -728,7 +767,7 @@ function onloadHandler()
       this.position = new Vector(x,y);
       this.radius = radius;
       this.velocity = new Vector(0,0);
-      this.friction = 0.991;
+      this.friction = PREFS.ballFriction;
       this.potted = false;
 
       this.update = function()
@@ -895,10 +934,6 @@ a:hover
       </div>
     
       <div id="custom-area">
-        <div class="felt-area">
-          <span>felt color:</span>
-          <input type="color" id="felt_color" value="#15460D" />
-        </div>
         <div class="pos-area">
             <span>x:</span><input type="text" id="cue_x" value="10" />
             <span>y:</span><input type="text" id="cue_y" value="0" />   
