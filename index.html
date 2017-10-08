@@ -7,9 +7,11 @@
       <script>
 window.addEventListener('load', onloadHandler, false);
 
-//When document is ready add an event listener onto the #power-slider
-document.addEventListener("DOMContentLoaded", function(event) { 
-  document.getElementById("power-slider").addEventListener("change", function(){
+//When document is ready add an event listener onto the #power-slide
+	     
+	      //Changed to ES6.
+document.addEventListener("DOMContentLoaded", (event) => { 
+  document.getElementById("power-slider").addEventListener("change", ()=>{
     //When the slider value is changes, the cue velocity also changes.
     document.getElementById('cue_velocity').value = document.getElementById('power-slider').value;
   });
@@ -17,35 +19,36 @@ document.addEventListener("DOMContentLoaded", function(event) {
 
 
 
-var WHITE = "rgb(255,255,255)";
-var YELLOW = "rgb(238,172,78)";
-var BLUE = "rgb(0, 0, 153)";
-var RED = "rgb(255,0,0)";
-var PURPLE = "rgb(102, 0, 204)";
-var ORANGE = "rgb(255, 102, 0)";
-var GREEN = "rgb(0, 102, 0)";
-var MAROON = "rgb(128, 0, 0)";
-var BLACK = "rgb(0,0,0)";
+	      // Use const for colors.
+const WHITE = "rgb(255,255,255)";
+const YELLOW = "rgb(238,172,78)";
+const BLUE = "rgb(0, 0, 153)";
+const RED = "rgb(255,0,0)";
+const PURPLE = "rgb(102, 0, 204)";
+const ORANGE = "rgb(255, 102, 0)";
+const GREEN = "rgb(0, 102, 0)";
+const MAROON = "rgb(128, 0, 0)";
+const BLACK = "rgb(0,0,0)";
 
-var BROWN = "rgb(80, 33, 4)";
-var GHOST_WHITE = "rgba(255,255,255, 0.3)";
+const BROWN = "rgb(80, 33, 4)";
+const GHOST_WHITE = "rgba(255,255,255, 0.3)";
 
-var GREY = "rgb(170,170,170)";
-var DARK_GREY = "rgb(200,200,200)";
+const GREY = "rgb(170,170,170)";
+const DARK_GREY = "rgb(200,200,200)";
 
-var FELT_COLOR = "rgb(21, 70, 13)";
-var STICK_COLOR = "rgb(183,167,133)";
+const FELT_COLOR = "rgb(21, 70, 13)";
+const STICK_COLOR = "rgb(183,167,133)";
 
-var BUMPER_WIDTH = 25;
-var BALL_RADIUS = 20;
+const BUMPER_WIDTH = 25;
+const BALL_RADIUS = 20;
 
-var CUE = 0;
-var SOLID = 1;
-var STRIPE = 2;
+const CUE = 0;
+const SOLID = 1;
+const STRIPE = 2;
 
-var X_MAX = 1120;
-var Y_MAX = 640;
-var SHOW_STICK_AT = 0.03;
+const X_MAX = 1120;
+const Y_MAX = 640;
+const SHOW_STICK_AT = 0.03;
 
 //for physics folks
 var BALL_MASS = 1;
