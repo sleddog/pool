@@ -56,8 +56,8 @@ var PREFS = {
     cueX: 200,
     cueY: 320,
     
-    minVelocity: 0,
-    maxVelocity: 100,
+    minVelocity: 1,
+    maxVelocity: 30,
     ballRadius: 20,
     ballMass: parseFloat(1),
     ballFriction: 0.991,
@@ -891,12 +891,8 @@ a:hover
 {
    text-decoration: underline;
 }
-#linkDiv
-{
-  text-align: right;
-}
 
-#control-area, #custom-area{
+#control-area, #custom-area, #linkDiv{
   padding: 0px 5px 25px 5px;
   display: flex;
   justify-content: center;
@@ -929,35 +925,40 @@ a:hover
    </head>
 
    <body style="background-color: #aaa">
+   <div align="center">
       <div class="table-container">
          <canvas id="canvas" width="1190" height="640"></canvas>
       </div>
     
-      <div id="custom-area">
-        <div class="pos-area">
-            <span>x:</span><input type="text" id="cue_x" value="10" />
-            <span>y:</span><input type="text" id="cue_y" value="0" />   
-        </div>
-        <div class="velocity-area">
-            <span>velocity:</span>
-            <input type="text" id="cue_velocity" value="4" />
-        </div>
-        
-      </div>
-
+      <table><tr><td>
       <div id="control-area">
           <div class="power-area">
-            <input type="range" min="1" max="100" value="50" id="power-slider">
+            <input type="range" min="1" max="30" value="10" id="power-slider">
           </div>
           <div class="shoot-area">
               <input type="button" id="shoot" value="Shoot [spacebar]" onclick="shoot()" />
           </div>
       </div>
-
-      <div id="linkDiv">
-         <a id="link" href="https://github.com/sleddog/pool" target="_blank">Check me out on Github</a>
+      </td><td>
+      <div id="custom-area">
+        <div class="velocity-area">
+            <span>velocity:</span>
+            <input type="text" id="cue_velocity" value="4" style="width: 40px"/>
+        </div>
+        <div class="pos-area">
+            <span>x:</span><input type="text" id="cue_x" value="10" style="width: 60px"/>
+            <span>y:</span><input type="text" id="cue_y" value="0" style="width: 60px"/>   
+        </div>
+        
       </div>
-      
+      </td>
+      <td>
+      <div id="linkDiv">
+        <a id="link" href="https://github.com/sleddog/pool" target="_blank">github.com/sleddog/pool</a>
+      </div>
+      </td>
+      </tr></table>
+      </div>
       <!-- Play potted ball sound. Sound effect obtained from https://www.zapsplat.com -->
       <audio id="ball_potted" src="./sound/ball_potted.mp3" autostart="false" ></audio>
    </body>
