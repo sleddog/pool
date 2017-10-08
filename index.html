@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- if you are reading this, then perhaps you want to help build this page.  Goto http://github.com/sleddog/pool --!>
 <html>
    <head>
       <title>Pool - by Devin Gray</title>
@@ -11,11 +12,16 @@ window.addEventListener('load', onloadHandler, false);
 //When document is ready add an event listener onto the #power-slider
 document.addEventListener("DOMContentLoaded", function(event) { 
   document.getElementById("power-slider").addEventListener("change", function(){
-    //When the slider value is changes, the cue velocity also changes.
-    document.getElementById('cue_velocity').value = document.getElementById('power-slider').value;
+    //fire the shot after the user changes the value of the power-slider higher then 0
+    var newVelocity = document.getElementById('power-slider').value;
+    if(newVelocity > 0) {
+	//fire off the cue ball!
+	shoot();
+	//reset power-slider for next shot
+	document.getElementById('power-slider').value = 0;
+    }
   });
 });
-
 
 
 var WHITE = "rgb(255,255,255)";
@@ -70,7 +76,7 @@ function shoot() {
     var x = document.getElementById('cue_x').value;
     var y = document.getElementById('cue_y').value;
 
-    //Set velocity value to the power-slider value. This is changed on every table click or when the slider position is changed.
+    //Set velocity value to the power-slider value
     var velocity = document.getElementById('power-slider').value;
     if(velocity > PREFS.maxVelocity)
       velocity = PREFS.maxVelocity;
@@ -254,13 +260,13 @@ function onloadHandler()
        ctx = canvas.getContext("2d"),
        width = canvas.width,
        height = canvas.height;
-    var keyPress = false;
 
    // data structures - generate initial balls
    ballList = new BallList();
    ballList.balls = getRack();
    
    var gui = new dat.GUI();
+   dat.GUI.toggleHide();
     
    var appearance = gui.addFolder('Appearance');
    var physics = gui.addFolder('Physics');
@@ -496,7 +502,7 @@ function onloadHandler()
        if(!placingCue){
            ballList.mousex = e.clientX - offsetx;
            ballList.mousey = e.clientY - offsety;
-           ballList.showGhostBall = !ballList.showGhostBall;
+           ballList.showGhostBall = true;
            //normalize ghostball
            var dx = ballList.mousex - (cue_ball.position.x);
            var dy = ballList.mousey - (cue_ball.position.y);
@@ -509,8 +515,6 @@ function onloadHandler()
            var newVelY = dy / length;
            document.getElementById('cue_x').value = newVelX;
            document.getElementById('cue_y').value = newVelY;
-           document.getElementById('cue_velocity').value = length / 30;
-           document.getElementById('power-slider').value = length / 30;
        }
    };
 
@@ -836,22 +840,6 @@ function onloadHandler()
 	 }
       };
    };
-
-   document.addEventListener("keydown", keyDownEvent, false);
-   document.addEventListener("keyup", keyUpEvent, false);
-
-   function keyDownEvent(e) {
-       var keyCode = e.keyCode;
-       if(keyCode == 32 && !keyPress) { //space bar
-
-       		keyPress = true
-           shoot();
-       }
-   }
-
-   function keyUpEvent(e){
-   	keyPress = false; 
-   }
 }
 
 // requestAnimFrame shim
@@ -905,8 +893,8 @@ a:hover
 
 #power-slider{
   -webkit-appearance: none;
-  width: 300px;
-  height: 20px;
+  width: 600px;
+  height: 10px;
   background: linear-gradient(to right, #5DFF00, #FF4D00);
 }
 
@@ -933,14 +921,11 @@ a:hover
       <table><tr><td>
       <div id="control-area">
           <div class="power-area">
-            <input type="range" min="1" max="30" value="10" id="power-slider">
-          </div>
-          <div class="shoot-area">
-              <input type="button" id="shoot" value="Shoot [spacebar]" onclick="shoot()" />
+            <input type="range" min="0" max="30" value="0" id="power-slider">
           </div>
       </div>
       </td><td>
-      <div id="custom-area">
+      <div id="custom-area" style="display:none">
         <div class="velocity-area">
             <span>velocity:</span>
             <input type="text" id="cue_velocity" value="4" style="width: 40px"/>
@@ -954,6 +939,7 @@ a:hover
       </td>
       <td>
       <div id="linkDiv">
+	      Preferences ('<b>H</b>' key) &nbsp;&nbsp;|&nbsp;&nbsp; open source:  &nbsp;&nbsp;
         <a id="link" href="https://github.com/sleddog/pool" target="_blank">github.com/sleddog/pool</a>
       </div>
       </td>
