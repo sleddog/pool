@@ -859,8 +859,17 @@ window.requestAnimFrame = (function()
       <style>
 .table-container
 {
-   text-align: center;
-   margin-bottom: 0.2em;
+	text-align: center;
+	margin-bottom: 0.2em;
+	padding: 0;
+    margin: 0;
+	display: -webkit-box;
+	display: -moz-box;
+	display: -ms-flexbox;
+	display: -webkit-flex;
+	display: flex;
+	align-items:center;
+	justify-content:center;
 }
 #canvas
 {
@@ -891,15 +900,25 @@ a:hover
   padding-right: 10px;
 }
 
+#control-area {
+	width:0;
+	margin: 0 10px 0 0;
+}
+
 #power-slider{
   -webkit-appearance: none;
+  /* Rotate +90° for a top-down slider*/
+  -ms-transform: rotate(-90deg);
+  -moz-transform: rotate(-90deg);
+  -webkit-transform: rotate(-90deg);
+  -o-transform: rotate(-90deg);
   width: 400px;
-  height: 10px;
+  height:10px;
   background: linear-gradient(to right, #5DFF00, #FF4D00);
 }
 
 #power-slider::-webkit-slider-thumb {
-    -webkit-appearance: none;
+	-webkit-appearance:none;
     width: 25px;
     height: 25px;
     background: red;
@@ -908,23 +927,24 @@ a:hover
     border-radius: 25px;
     cursor: pointer;
 }
-
       </style>
    </head>
 
    <body style="background-color: #aaa">
    <div align="center">
       <div class="table-container">
-         <canvas id="canvas" width="1190" height="640"></canvas>
+	      <div id="control-area">
+          	<div class="power-area">
+            	<input type="range" min="0" max="30" value="0" id="power-slider">
+          	</div>
+      	</div>
+      	<div id="canvas-area">
+         	<canvas id="canvas" width="1190" height="640"></canvas>
+     	</div>
       </div>
     
-      <table><tr><td>
-      <div id="control-area">
-          <div class="power-area">
-            <input type="range" min="0" max="30" value="0" id="power-slider">
-          </div>
-      </div>
-      </td><td>
+      <table><tr>
+      <td>
       <div id="custom-area" style="display:none">
         <div class="velocity-area">
             <span>velocity:</span>
