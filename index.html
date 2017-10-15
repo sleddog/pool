@@ -14,11 +14,10 @@ document.addEventListener("DOMContentLoaded", function(event) {
   document.getElementById("power-slider").addEventListener("change", function(){
     //fire the shot after the user changes the value of the power-slider higher then 0
     var newVelocity = document.getElementById('power-slider').value;
-    if(newVelocity > 0) {
-	//fire off the cue ball!
-	shoot();
-	//reset power-slider for next shot
-	document.getElementById('power-slider').value = 0;
+    if(newVelocity > 0 && !animatingCueStickShoot) {
+        //start the cue stick shooting animation
+        animatingCueStickShoot = true;
+        cueStickAnimationCurrentFrame = 0;
     }
   });
 });
@@ -52,6 +51,10 @@ var ballList;
 var pottedBalls = [];
 
 var placingCue = false;
+
+var animatingCueStickShoot = false;
+var cueStickAnimationNumberOfFrames = 3;
+var cueStickAnimationCurrentFrame = 0;
 
 var PREFS = {
     bumperColor: "rgb(21, 70, 13)",
@@ -90,6 +93,9 @@ function shoot() {
     cue_ball.velocity.y = y * velocity;
     ballList.showGhostBall = false;
     ballList.balls[0] = cue_ball;
+
+    //reset power-slider for next shot
+    document.getElementById('power-slider').value = 0;
 }
 
 
@@ -731,7 +737,28 @@ function onloadHandler()
 		var norm_y = y / Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
 
 		ctx.save();
-		ctx.translate(this.balls[0].position.x + (norm_x * (PREFS.ballRadius + 10)), this.balls[0].position.y + (norm_y * (PREFS.ballRadius + 10)));
+		ctx.translate(this.balls[0].position.x + (norm_x * (PREFS.ballRadius + 4)), this.balls[0].position.y + (norm_y * (PREFS.ballRadius + 4)));
+
+		var stickMoveDistance = document.getElementById('power-slider').value * 3;
+
+		if(!animatingCueStickShoot){
+		    //move cue stick back when changing the power slider
+		    ctx.translate((norm_x * stickMoveDistance), (norm_y * stickMoveDistance));
+        }else{
+            cueStickAnimationCurrentFrame++;
+
+            //calculate how far into the animation, starting at 100%, going down to 0%
+            var percent = ((cueStickAnimationNumberOfFrames - cueStickAnimationCurrentFrame) / cueStickAnimationNumberOfFrames);
+            //make animation look more natural using quadratic ease out instead of linear
+            percent = (percent * (2 - percent));
+            //move cue stick forward toward ball
+            ctx.translate(norm_x * (stickMoveDistance * percent), norm_y * (stickMoveDistance * percent));
+            //if the cue stick animation is done, shoot the ball
+		    if(cueStickAnimationCurrentFrame >= cueStickAnimationNumberOfFrames){
+		        shoot();
+		        animatingCueStickShoot = false;
+            }
+        }
 
 		ctx.beginPath();
 		ctx.lineWidth = 10;
@@ -758,7 +785,12 @@ function onloadHandler()
 		ctx.closePath();
 
 		ctx.restore();
-	 }
+	 }else{
+         //still allow shooting if the ball is rolling
+         if(animatingCueStickShoot){
+             shoot();
+             animatingCueStickShoot = false;
+         }}
       };
    };
 
