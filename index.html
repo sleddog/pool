@@ -744,21 +744,21 @@ function onloadHandler()
 		if(!animatingCueStickShoot){
 		    //move cue stick back when changing the power slider
 		    ctx.translate((norm_x * stickMoveDistance), (norm_y * stickMoveDistance));
-        }else{
-            cueStickAnimationCurrentFrame++;
+		}else{
+		    cueStickAnimationCurrentFrame++;
 
-            //calculate how far into the animation, starting at 100%, going down to 0%
-            var percent = ((cueStickAnimationNumberOfFrames - cueStickAnimationCurrentFrame) / cueStickAnimationNumberOfFrames);
-            //make animation look more natural using quadratic ease out instead of linear
-            percent = (percent * (2 - percent));
-            //move cue stick forward toward ball
-            ctx.translate(norm_x * (stickMoveDistance * percent), norm_y * (stickMoveDistance * percent));
-            //if the cue stick animation is done, shoot the ball
+		    //calculate how far into the animation, starting at 100%, going down to 0%
+		    var percent = ((cueStickAnimationNumberOfFrames - cueStickAnimationCurrentFrame) / cueStickAnimationNumberOfFrames);
+		    //make animation look more natural using quadratic ease out instead of linear
+		    percent = (percent * (2 - percent));
+		    //move cue stick forward toward ball
+		    ctx.translate(norm_x * (stickMoveDistance * percent), norm_y * (stickMoveDistance * percent));
+		    //if the cue stick animation is done, shoot the ball
 		    if(cueStickAnimationCurrentFrame >= cueStickAnimationNumberOfFrames){
 		        shoot();
 		        animatingCueStickShoot = false;
-            }
-        }
+		    }
+		}
 
 		ctx.beginPath();
 		ctx.lineWidth = 10;
