@@ -188,7 +188,9 @@
             ball2.update();
         }
 
-        function drawCueBallTravelPreview(ctx, cueBallPos, mousePos) {
+        // draws ghost ball and supposed trajectory of the first object ball
+        // that would be hit by cue ball
+        function drawShootPreview(ctx, cueBallPos, mousePos) {
 
             //draw the ghost ball
             ctx.fillStyle = GHOST_WHITE;
@@ -210,9 +212,8 @@
 
                 // draw ghost line of hit object ball
                 ctx.beginPath();
-                ctx.moveTo(collisionPreviewInfo.pos.x, collisionPreviewInfo.pos.y);
+                ctx.moveTo(collisionPreviewInfo.ball.position.x, collisionPreviewInfo.ball.position.y);
                 ctx.lineTo(collisionPreviewInfo.hitBallTrajectory.x, collisionPreviewInfo.hitBallTrajectory.y);
-                //ctx.lineTo(10, 10);
                 ctx.stroke();
 
             } else {
@@ -230,65 +231,15 @@
             }
         }
 
-        function getTrajectory(ghostBallPos, hitBallPos) {
+        function calculateCollisionPreview(cueBallPos, mousePos) {
 
-            // get the mtd
-            var pos1 = ghostBallPos;
-            var pos2 = bhitBallPos;
-            var delta = pos1.sub(ball2.position);
-            var d = delta.length();
-
-            // minimum translation distance to push balls apart after intersecting
-            var tmp = ((ball1.radius + ball2.radius) - d) / d;
-            var mtd = delta.scale(tmp);
-
-            // resolve intersection --
-            // inverse mass quantities
-            var im1 = 1 / PREFS.ballMass;
-            var im2 = 1 / PREFS.ballMass;
-
-            // impact speed
-            var vel1 = ball1.velocity.clone();
-            var vel2 = ball2.velocity.clone();
-            var v = vel1.sub(vel2);
-            var mtdn = mtd.norm();
-            var vn = v.dot(mtd.norm());
-
-            // sphere intersecting but moving away from each other already
-            if (vn > 0.0) {
-                return;
-            }
-
-            // collision impulse
-            var i = (-(1.0 + PREFS.restitution) * vn) / (im1 + im2);
-            var impulse = mtd.scale(i);
-
-            // change in momentum
-            var newVel1 = vel1.add(impulse.scale(im1));
-            var newVel2 = vel2.sub(impulse.scale(im2));
-        }
-
-        function isGoingRightUp(v) {
-            return v.x > 0.0 && v.y < 0.0;
-        }
-
-        function isGoingLeftUp(v) {
-            return v.x < 0.0 && v.y < 0.0;
-        }
-
-        function isGoingRightDown(v) {
-            return v.x > 0.0 && v.y > 0.0;
-        }
-
-        function isGoingLeftDown(v) {
-            return v.x < 0.0 && v.y > 0.0;
-        }
-
-        function getCollisionPreviewPosition(cueBallPos, mousePos) {
-            
             // direction the ball is traveling
-            var moveDirection = new Vector(-1.0 * (cueBallPos.x - mousePos.x), -1.0 * (cueBallPos.y - mousePos.y));
+            var moveDirection = new Vector(
+                -1.0 * (cueBallPos.x - mousePos.x),
+                -1.0 * (cueBallPos.y - mousePos.y)
+            );
 
+            // result object containing calculated infos
             var result = {
                 ball: null, // ball that is going to be hit
                 hitBallTrajectory: null,
@@ -296,101 +247,147 @@
             };
             var ballToCollideWithDistance = Number.MAX_VALUE;
 
-            for (var i = 0; i < ballList.balls.length; i++) { 
+            // iterate through ball list 
+            for (var i = 0; i < ballList.balls.length; i++) {
                 var currentBall = ballList.balls[i];
 
-                if (currentBall.type == CUE) continue;
+                // skip cue ball and potted balls 
+                if (currentBall.potted
+                    ||  currentBall.type == CUE) {
+                    continue;
+                }
 
                 // vector from cue to object ball
                 var a = new Vector(-1.0 * (cueBallPos.x - currentBall.position.x), -1.0 * (cueBallPos.y - currentBall.position.y));
                 // vector from cue ball to mouse click position
                 var b = moveDirection;
 
-
-                if (isGoingRightUp(moveDirection)) {
-
-                    if (currentBall.position.x < cueBallPos.x - PREFS.ballRadius
-                     || currentBall.position.y > cueBallPos.y + PREFS.ballRadius) {
-                        continue
-                    }
-
-                } else if (isGoingLeftUp(moveDirection)) {
-
-                    if (currentBall.position.x > cueBallPos.x + PREFS.ballRadius
-                     || currentBall.position.y > cueBallPos.y +  PREFS.ballRadius) {
-                        continue
-                    }
-
-                } else if (isGoingRightDown(moveDirection)) {
-
-                    if (currentBall.position.x < cueBallPos.x - PREFS.ballRadius
-                     || currentBall.position.y < cueBallPos.y - PREFS.ballRadius) {
-                        continue
-                    }
-
-                } else if (isGoingLeftDown(moveDirection)) {
-
-                    if (currentBall.position.x > cueBallPos.x + PREFS.ballRadius
-                     || currentBall.position.y < cueBallPos.y - PREFS.ballRadius) {
-                        continue
-                    }
-                }
-
                 var projection = orthogonalVectorProjection(
-                    a,b
+                    a, b
                 );
 
+                // Vector between object ball and projection.
+                // Length of this vector is equal to the minimal distance between object ball
+                // and initial path of cue ball
                 var distanceVector = new Vector(
-                    (a.x - projection.x), 
+                    (a.x - projection.x),
                     (a.y - projection.y)
                 );
                 var distance = vectorMagnitude(distanceVector);
 
-            
+
+                // cue ball could hit the current ball
                 if (distance < PREFS.ballRadius * 2.0) {
+
+                    // selected move direction of cue ball is pointing right up
+                    if (isPointingRightUp(moveDirection)) {
+
+                        // skip balls that are in other direction
+                        if (!(projection.x > 0 || projection.y < 0)) {
+                            continue;
+                        }
+
+                        // selected move direction of cue ball is pointing left up
+                    } else if (isPointingLeftUp(moveDirection)) {
+
+                        // skip balls that are in other direction
+                        if (!(projection.x < 0 || projection.y < 0)) {
+                            continue;
+                        }
+
+                        // selected move direction of cue ball is pointing right down
+                    } else if (isPointingRightDown(moveDirection)) {
+
+                        // skip balls that are in other direction
+                        if (!(projection.x > 0 || projection.y > 0)) {
+                            continue;
+                        }
+
+                        // selected move direction of cue ball is pointing left down
+                    } else if (isPointingLeftDown(moveDirection)) {
+
+                        // skip balls that are in other direction
+                        if (!(projection.x < 0 || projection.y > 0)) {
+                            continue;
+                        }
+                    }
 
                     // calculate distance of current cue ball pos
                     var dx = currentBall.position.x - cueBallPos.x;
                     var dy = currentBall.position.y - cueBallPos.y;
                     var distanceToCue = Math.sqrt(dx * dx + dy * dy);
-                    
+
+                    // if the distance to the cue ball is the shortest yet
+                    // the current ball is the first ball to be hit
                     if (distanceToCue < ballToCollideWithDistance) {
 
-                        console.log("setting for ball " + currentBall.num);
                         ballToCollideWithDistance = distanceToCue;
 
                         var resultMagnitude = vectorMagnitude(projection);
-                        var targetMagnitude = ((resultMagnitude - (2 * PREFS.ballRadius - distance)) / resultMagnitude) * resultMagnitude;
+                        // good ol' Pythagorean theorem
+                        var delta = Math.sqrt(Math.pow(2 * PREFS.ballRadius, 2) - Math.pow(distance, 2));
+                        var targetMagnitude = ((resultMagnitude - delta) / resultMagnitude) * resultMagnitude;
 
+                        // scale projection vector to desired length
                         projection = normalizeVector(projection);
-
-                        var test = new Vector(
+                        projection = new Vector(
                             projection.x * targetMagnitude,
                             projection.y * targetMagnitude
                         );
 
+                        // set result
                         result.ball = currentBall;
                         result.pos = new Vector(
-                            cueBallPos.x + test.x,
-                            cueBallPos.y + test.y  
+                            cueBallPos.x + projection.x,
+                            cueBallPos.y + projection.y
                         );
+
+                        // calculate trajectory angle of object ball that is hit
                         var trajectory = new Vector(
                             (currentBall.position.x - result.pos.x),
                             (currentBall.position.y - result.pos.y)
                         );
-
-                        result.hitBallTrajectory = new Vector(
-                            result.pos.x + trajectory.x * 15,
-                            result.pos.y + trajectory.y * 15
+                        // set length of trajectory vector to 1250, becaus that should be 
+                        // long enough
+                        trajectory = normalizeVector(trajectory);
+                        trajectory = new Vector(
+                            trajectory.x * 1250,
+                            trajectory.y * 1250
                         );
-                    }    
+
+                        // trajectory starts from hit ball
+                        result.hitBallTrajectory = new Vector(
+                            currentBall.position.x + trajectory.x,
+                            currentBall.position.y + trajectory.y
+                        );
+                    }
                 }
             }
 
             return result;
         }
 
-        // calculates ((a * b) / |b|) * b
+        // returns true if the given vectors direction is pointing right up
+        function isPointingRightUp(v) {
+            return v.x > 0.0 && v.y < 0.0;
+        }
+
+        // returns true if the given vectors direction is pointing left up
+        function isPointingLeftUp(v) {
+            return v.x < 0.0 && v.y < 0.0;
+        }
+
+        // returns true if the given vectors direction is pointing right down
+        function isPointingRightDown(v) {
+            return v.x > 0.0 && v.y > 0.0;
+        }
+
+        // returns true if the given vectors direction is pointing left down
+        function isPointingLeftDown(v) {
+            return v.x < 0.0 && v.y > 0.0;
+        }
+
+        // calculates orthogonal projection of a onto b
         function orthogonalVectorProjection(a, b) {
             var dotp = dotProduct(a, b);
             var divident = Math.pow(vectorMagnitude(b), 2);
@@ -410,7 +407,7 @@
         }
         function normalizeVector(v) {
             var magnitude = vectorMagnitude(v);
-            return new Vector((1 / magnitude) * v.x, (1 / magnitude) * v.y); 
+            return new Vector((1 / magnitude) * v.x, (1 / magnitude) * v.y);
         }
 
         function potted(b) {
@@ -730,11 +727,11 @@
                     ballList.mousex = e.clientX - offsetx;
                     ballList.mousey = e.clientY - offsety;
 
-                    collisionPreviewInfo = getCollisionPreviewPosition(
+                    // recalculate preview of shoot at given angle
+                    collisionPreviewInfo = calculateCollisionPreview(
                         cue_ball.position,
                         new Vector(ballList.mousex, ballList.mousey)
                     );
-
                     ballList.showGhostBall = true;
                     //normalize ghostball
                     var dx = ballList.mousex - (cue_ball.position.x);
@@ -794,7 +791,7 @@
                 console.log("mouse click at { x: " + ballList.mousex + ", y: " + ballList.mousey + " }");
 
 
-                
+
 
                 if (cue_ball.potted && placingCue) {
                     //prevent placing ball if colliding with something
@@ -937,32 +934,7 @@
                         ctx.restore();
                     }
 
-                    if (this.showGhostBall) {
-                        // //draw the ghost ball
-                        // ctx.fillStyle = GHOST_WHITE;
-                        // ctx.strokeStyle = GHOST_WHITE;
-                        // ctx.lineWidth = 1;
 
-                        // // draw ghost ball at mouse click position
-                        // ctx.beginPath();
-                        // ctx.arc(this.mousex, this.mousey, PREFS.ballRadius, 0, TWOPI, true);
-                        // ctx.fill();
-
-
-                        // //draw the ghost line
-                        // ctx.beginPath();
-                        // ctx.moveTo(this.balls[0].position.x, this.balls[0].position.y);
-                        // ctx.lineTo(this.mousex, this.mousey);
-                        // ctx.stroke();
-
-                        drawCueBallTravelPreview(
-                            ctx,
-                            this.balls[0].position, 
-                            new Vector(this.mousex, this.mousey)
-                        );
-
-                        // HERE1
-                    }
 
                     if (Math.abs(this.balls[0].velocity.x) < PREFS.showStickAt && Math.abs(this.balls[0].velocity.y) < PREFS.showStickAt
                         && !placingCue) {
@@ -971,6 +943,15 @@
 
                         var norm_x = x / Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
                         var norm_y = y / Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
+
+                        if (this.showGhostBall) {
+
+                            drawShootPreview(
+                                ctx,
+                                this.balls[0].position,
+                                new Vector(this.mousex, this.mousey)
+                            );
+                        }
 
                         ctx.save();
                         ctx.translate(this.balls[0].position.x + (norm_x * (PREFS.ballRadius + 10)), this.balls[0].position.y + (norm_y * (PREFS.ballRadius + 10)));
@@ -1174,15 +1155,18 @@
                             <input type="text" id="cue_velocity" value="4" style="width: 40px" />
                         </div>
                         <div class="pos-area">
-                            <span>x:</span><input type="text" id="cue_x" value="10" style="width: 60px" />
-                            <span>y:</span><input type="text" id="cue_y" value="0" style="width: 60px" />
+                            <span>x:</span>
+                            <input type="text" id="cue_x" value="10" style="width: 60px" />
+                            <span>y:</span>
+                            <input type="text" id="cue_y" value="0" style="width: 60px" />
                         </div>
 
                     </div>
                 </td>
                 <td>
                     <div id="linkDiv">
-                        Options ('<b>H</b>' key) &nbsp;&nbsp;|&nbsp;&nbsp;
+                        Options ('
+                        <b>H</b>' key) &nbsp;&nbsp;|&nbsp;&nbsp;
                         <a id="link" href="https://github.com/sleddog/pool" target="_blank">github.com/sleddog/pool</a>
                     </div>
                 </td>
