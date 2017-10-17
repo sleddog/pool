@@ -123,7 +123,35 @@ function playSound(sound, vol = 1.0){
     soundElement.volume = vol;
     soundElement.play();
 }
-        
+
+/**
+ * Map the velocity of a collision (involving one or two balls)
+ * to a sound volume suitable for use in a call to playSound()
+ * 
+ * Note: Pass the ball indices here, rather than passing the ball objects
+ * directly
+ */
+function volFromCollision(b1, b2 = null) {
+    var ball1 = ballList.balls[b1], ball2,
+        v1 = ball1.velocity.clone(), v2,
+        deltaV,
+        collisionSpeed;
+
+        if (b2 != null) {
+            ball2 = ballList.balls[b2]
+            v2 = ball2.velocity.clone();
+            // we only care about the magnitude of the difference in velocities,
+            // so subtraction order doesn't matter
+            deltaV = v1.sub(v2);
+        } else {
+            deltaV = v1;
+        }
+
+        collisionSpeed = deltaV.length();
+
+        return Math.sin(Math.PI*collisionSpeed/2*PREFS.maxVelocity);
+}
+
 function colliding(b1, b2) {
 
     //compare if this ball "hits" the other
@@ -218,7 +246,7 @@ function potted(b) {
             if(!ball.potted){
                 console.log('POTTED in pocket: '+ p + '!!!!');
                 // pass 0.0-1.0 normalized speed as volume
-                playSound('ball_potted', ball.velocity.length()/PREFS.maxVelocity);
+                playSound('ball_potted', volFromCollision(b));
             }
 	    return true;
         }
