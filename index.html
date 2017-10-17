@@ -360,8 +360,7 @@ function calculateCollisionPreview(cueBallPos, mousePos) {
         var currentBall = ballList.balls[i];
 
         // skip cue ball and potted balls 
-        if (currentBall.potted
-            ||  currentBall.type == CUE) {
+        if (currentBall.potted || currentBall.type == CUE) {
             continue;
         }
 
