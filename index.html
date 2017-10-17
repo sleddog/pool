@@ -64,6 +64,7 @@ var PREFS = {
     bumperColor: "rgb(21, 70, 13)",
     feltColor: "rgb(66, 169, 49)",
     stickColor: "rgb(183,167,133)",
+    mute: false,
     rackX: 800,
     rackY: 320,
     cueX: 200,
@@ -243,7 +244,7 @@ function potted(b) {
 
         if (distance < ball.radius + 25) {
             //prevent cue ball from repeating sound after scratching
-            if(!ball.potted){
+            if(!ball.potted && !PREFS.mute){
                 console.log('POTTED in pocket: '+ p + '!!!!');
                 // pass 0.0-1.0 normalized speed as volume
                 playSound('ball_potted', volFromCollision(b));
@@ -538,6 +539,7 @@ function onloadHandler()
    dat.GUI.toggleHide();
     
    var appearance = gui.addFolder('Appearance');
+   var sounds = gui.addFolder('Sounds');
    var physics = gui.addFolder('Physics');
 
    appearance.addColor(PREFS, 'bumperColor');
@@ -558,6 +560,8 @@ function onloadHandler()
        ballList.balls = getRack();
    });
    
+   sounds.add(PREFS, 'mute', 0, 1);
+   
    physics.add(PREFS, 'minVelocity', 0, 500);
    physics.add(PREFS, 'maxVelocity', 0, 500);
    physics.add(PREFS, 'ballRadius', 10, 30).onChange(function() {
@@ -572,6 +576,7 @@ function onloadHandler()
    physics.add(PREFS, 'restitution', 0, 5);
    
    appearance.open();
+   sounds.open();
    physics.open();
 
    function getRack() {
