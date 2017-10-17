@@ -119,7 +119,25 @@ function playSound(sound, vol = 1.0){
     soundElement.volume = vol;
     soundElement.play();
 }
+
+/**
+ * Map the velocity of a collision (involving one or two balls)
+ * to a sound volume suitable for use in a call to playSound()
+ */
+function volFromCollision(ball1, ball2 = null) {
+    var v1 = ball1.velocity.clone(),
+        v2;
+
+        if (ball2) {
+            v2 = ball2.velocity.clone();
+            // we only care about the magnitude of the difference in velocities,
+            // so subtraction order doesn't matter
+            return Math.sin(Math.PI*(v1-v2)/2*PREFS.maxVelocity);
+        }
         
+        return Math.sin(Math.PI*v1/2*PREFS.maxVelocity);
+}
+
 function colliding(b1, b2) {
 
     //compare if this ball "hits" the other
@@ -214,7 +232,7 @@ function potted(b) {
             if(!ball.potted){
                 console.log('POTTED in pocket: '+ p + '!!!!');
                 // pass 0.0-1.0 normalized speed as volume
-                playSound('ball_potted', ball.velocity.length()/PREFS.maxVelocity);
+                playSound('ball_potted', volFromCollision(ball));
             }
 	    return true;
         }
