@@ -9,19 +9,48 @@
       <script>
 window.addEventListener('load', onloadHandler, false);
 
+
+//Global for holding the DOM element for the power slider, it's intended as an optimization when gradually increasing the value.
+var PowerSlider;
+
 //When document is ready add an event listener onto the #power-slider
 document.addEventListener("DOMContentLoaded", function(event) { 
-  document.getElementById("power-slider").addEventListener("change", function(){
-    //fire the shot after the user changes the value of the power-slider higher then 0
-    var newVelocity = document.getElementById('power-slider').value;
+
+//We assign the power slider after the DOM has loaded
+PowerSlider = document.getElementById('power-slider');
+
+//We add a new event listener for keydown to handle pressing space for powerslider.
+document.addEventListener('keydown', function(event) {
+
+    //Check it's space (key 32)
+    if(event.keyCode==32)
+        PowerSlider.value++;    //If it is we increment the powerslider by 1
+    }, false);
+
+//Another event listener for keyup to know when we finished charging the powerslider by space.
+document.addEventListener('keyup', function(event) {
+
+    //Check it's space
+    if(event.keyCode==32)
+        processPowerSlider();   //If we released space just now, we call the process function for the powerslider.
+    }, false);
+
+//The processPowerSlider handles generally the power slider and here it's tied to change event on the actual DOM slider so it processes mouse slider drag too. 
+  document.getElementById("power-slider").addEventListener("change",processPowerSlider);
+});
+
+
+//Function that processes the powerslider so it's easily reusable.
+function processPowerSlider(){
+//fire the shot after the user changes the value of the power-slider higher then 0
+var newVelocity =PowerSlider.value;
+var cue_ball = ballList.balls[0];
     if(newVelocity > 0 && !animatingCueStickShoot) {
         //start the cue stick shooting animation
         animatingCueStickShoot = true;
         cueStickAnimationCurrentFrame = 0;
     }
-  });
-});
-
+}
 
 var WHITE = "rgb(255,255,255)";
 var YELLOW = "rgb(238,172,78)";
