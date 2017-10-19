@@ -44,7 +44,6 @@ document.addEventListener('keyup', function(event) {
 function processPowerSlider(){
 //fire the shot after the user changes the value of the power-slider higher then 0
 var newVelocity =PowerSlider.value;
-var cue_ball = ballList.balls[0];
     if(newVelocity > 0 && !animatingCueStickShoot) {
         //start the cue stick shooting animation
         animatingCueStickShoot = true;
@@ -801,7 +800,8 @@ function onloadHandler()
    // event handlers
    var mouseClick = function(e)
    {
-       var cue_ball = ballList.balls[0];
+       //Obsolete now but I leave it here for easy modifications
+      /* var cue_ball = ballList.balls[0];
        if(!placingCue){
            ballList.mousex = e.clientX - offsetx;
            ballList.mousey = e.clientY - offsety;
@@ -824,7 +824,7 @@ function onloadHandler()
            var newVelY = dy / length;
            document.getElementById('cue_x').value = newVelX;
            document.getElementById('cue_y').value = newVelY;
-       }
+       }*/
    };
 
    var mouseMove = function(e)
@@ -845,6 +845,32 @@ function onloadHandler()
                }
            }
        }
+
+        if(!placingCue){
+            ballList.mousex = e.clientX - offsetx;
+            ballList.mousey = e.clientY - offsety;
+
+            // recalculate preview of shoot at given angle
+            collisionPreviewInfo = calculateCollisionPreview(
+                cue_ball.position,
+                new Vector(ballList.mousex, ballList.mousey)
+            );
+            ballList.showGhostBall = true;
+            //normalize ghostball
+            var dx = ballList.mousex - (cue_ball.position.x);
+            var dy = ballList.mousey - (cue_ball.position.y);
+            var length = Math.sqrt(dx * dx + dy * dy);
+            //prevent a divide by zero if clicking at the same exact point the cue ball is at
+            if(length == 0){
+                return;
+            }
+            var newVelX = dx / length;
+            var newVelY = dy / length;
+            document.getElementById('cue_x').value = newVelX;
+            document.getElementById('cue_y').value = newVelY;
+        }
+
+       
    };
 
    var mouseDown = function(e){
