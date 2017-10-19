@@ -801,35 +801,7 @@ function onloadHandler()
    }
 
    // event handlers
-   var mouseClick = function(e)
-   {
-       //Obsolete now but I leave it here for easy modifications
-      /* var cue_ball = ballList.balls[0];
-       if(!placingCue){
-           ballList.mousex = e.clientX - offsetx;
-           ballList.mousey = e.clientY - offsety;
-
-           // recalculate preview of shoot at given angle
-           collisionPreviewInfo = calculateCollisionPreview(
-               cue_ball.position,
-               new Vector(ballList.mousex, ballList.mousey)
-           );
-           ballList.showGhostBall = true;
-           //normalize ghostball
-           var dx = ballList.mousex - (cue_ball.position.x);
-           var dy = ballList.mousey - (cue_ball.position.y);
-           var length = Math.sqrt(dx * dx + dy * dy);
-           //prevent a divide by zero if clicking at the same exact point the cue ball is at
-           if(length == 0){
-               return;
-           }
-           var newVelX = dx / length;
-           var newVelY = dy / length;
-           document.getElementById('cue_x').value = newVelX;
-           document.getElementById('cue_y').value = newVelY;
-       }*/
-   };
-
+  
    var mouseMove = function(e)
    {
        var cue_ball = ballList.balls[0];
@@ -918,7 +890,6 @@ function onloadHandler()
        }
    };
 
-   canvas.addEventListener("click", mouseClick, false);
    canvas.addEventListener("mousemove", mouseMove, false);
    canvas.addEventListener("mousedown", mouseDown, false);
    canvas.addEventListener("mouseup", mouseUp, false);
