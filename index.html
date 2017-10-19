@@ -87,7 +87,10 @@ var cueStickAnimationCurrentFrame = 0;
 // object that contains necessary information to draw
 // shoot preview
 var collisionPreviewInfo = null;
-        
+
+//Global that tracks if the left mouse button is held down
+var LMBHold;
+
 var PREFS = {
     bumperColor: "rgb(21, 70, 13)",
     feltColor: "rgb(66, 169, 49)",
@@ -846,7 +849,8 @@ function onloadHandler()
            }
        }
 
-        if(!placingCue){
+    //If the mouse is moving and the left mouse button is held down, we change & draw the preview.
+       if(!placingCue && LMBHold){
             ballList.mousex = e.clientX - offsetx;
             ballList.mousey = e.clientY - offsety;
 
@@ -869,11 +873,13 @@ function onloadHandler()
             document.getElementById('cue_x').value = newVelX;
             document.getElementById('cue_y').value = newVelY;
         }
-
-       
    };
 
    var mouseDown = function(e){
+       //We signal we starting holding down the left mouse button
+       if(e.button ==0)
+        LMBHold=true;
+
        var cue_index = 0;
        var cue_ball = ballList.balls[cue_index];
        if(cue_ball.potted){
@@ -890,6 +896,11 @@ function onloadHandler()
    };
 
    var mouseUp = function (e) {
+
+       //We signal that the left mouse button is not anymore held down.
+       if(e.button==0)
+        LMBHold=false;
+
        var cue_index = 0;
        var cue_ball = ballList.balls[cue_index];
        if(cue_ball.potted && placingCue) {
