@@ -44,7 +44,6 @@ document.addEventListener('keyup', function(event) {
 function processPowerSlider(){
 //fire the shot after the user changes the value of the power-slider higher then 0
 var newVelocity =PowerSlider.value;
-var cue_ball = ballList.balls[0];
     if(newVelocity > 0 && !animatingCueStickShoot) {
         //start the cue stick shooting animation
         animatingCueStickShoot = true;
@@ -88,7 +87,10 @@ var cueStickAnimationCurrentFrame = 0;
 // object that contains necessary information to draw
 // shoot preview
 var collisionPreviewInfo = null;
-        
+
+//Global that tracks if the left mouse button is held down
+var LMBHold;
+
 var PREFS = {
     bumperColor: "rgb(21, 70, 13)",
     feltColor: "rgb(66, 169, 49)",
@@ -799,34 +801,7 @@ function onloadHandler()
    }
 
    // event handlers
-   var mouseClick = function(e)
-   {
-       var cue_ball = ballList.balls[0];
-       if(!placingCue){
-           ballList.mousex = e.clientX - offsetx;
-           ballList.mousey = e.clientY - offsety;
-
-           // recalculate preview of shoot at given angle
-           collisionPreviewInfo = calculateCollisionPreview(
-               cue_ball.position,
-               new Vector(ballList.mousex, ballList.mousey)
-           );
-           ballList.showGhostBall = true;
-           //normalize ghostball
-           var dx = ballList.mousex - (cue_ball.position.x);
-           var dy = ballList.mousey - (cue_ball.position.y);
-           var length = Math.sqrt(dx * dx + dy * dy);
-           //prevent a divide by zero if clicking at the same exact point the cue ball is at
-           if(length == 0){
-               return;
-           }
-           var newVelX = dx / length;
-           var newVelY = dy / length;
-           document.getElementById('cue_x').value = newVelX;
-           document.getElementById('cue_y').value = newVelY;
-       }
-   };
-
+  
    var mouseMove = function(e)
    {
        var cue_ball = ballList.balls[0];
@@ -845,9 +820,38 @@ function onloadHandler()
                }
            }
        }
+
+    //If the mouse is moving and the left mouse button is held down, we change & draw the preview.
+       if(!placingCue && LMBHold){
+            ballList.mousex = e.clientX - offsetx;
+            ballList.mousey = e.clientY - offsety;
+
+            // recalculate preview of shoot at given angle
+            collisionPreviewInfo = calculateCollisionPreview(
+                cue_ball.position,
+                new Vector(ballList.mousex, ballList.mousey)
+            );
+            ballList.showGhostBall = true;
+            //normalize ghostball
+            var dx = ballList.mousex - (cue_ball.position.x);
+            var dy = ballList.mousey - (cue_ball.position.y);
+            var length = Math.sqrt(dx * dx + dy * dy);
+            //prevent a divide by zero if clicking at the same exact point the cue ball is at
+            if(length == 0){
+                return;
+            }
+            var newVelX = dx / length;
+            var newVelY = dy / length;
+            document.getElementById('cue_x').value = newVelX;
+            document.getElementById('cue_y').value = newVelY;
+        }
    };
 
    var mouseDown = function(e){
+       //We signal we starting holding down the left mouse button
+       if(e.button ==0)
+        LMBHold=true;
+
        var cue_index = 0;
        var cue_ball = ballList.balls[cue_index];
        if(cue_ball.potted){
@@ -864,6 +868,11 @@ function onloadHandler()
    };
 
    var mouseUp = function (e) {
+
+       //We signal that the left mouse button is not anymore held down.
+       if(e.button==0)
+        LMBHold=false;
+
        var cue_index = 0;
        var cue_ball = ballList.balls[cue_index];
        if(cue_ball.potted && placingCue) {
@@ -881,7 +890,6 @@ function onloadHandler()
        }
    };
 
-   canvas.addEventListener("click", mouseClick, false);
    canvas.addEventListener("mousemove", mouseMove, false);
    canvas.addEventListener("mousedown", mouseDown, false);
    canvas.addEventListener("mouseup", mouseUp, false);
