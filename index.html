@@ -750,7 +750,7 @@ function onloadHandler()
 
       //right rail
       ctx.beginPath();
-      ctx.rect(X_MAX-20,0,X_MAX-20, Y_MAX);
+      ctx.rect(X_MAX-20,0, 20, Y_MAX);
       ctx.fill();
 
       //bottom rail
@@ -762,8 +762,9 @@ function onloadHandler()
       ctx.beginPath();
       ctx.rect(0,0,20, Y_MAX);
       ctx.fill();
+   }
 
-
+   function drawTracks(){
       //background behind tracks
       ctx.fillStyle = GREY;
       ctx.beginPath();
@@ -797,7 +798,17 @@ function onloadHandler()
       ctx.beginPath();
       ctx.rect(X_MAX,75,5,10);
       ctx.fill();
+   }
 
+   function drawPottedBalls(){
+       for (var i = 0; i < pottedBalls.length; i++)
+       {
+           ctx.save();
+           if(pottedBalls[i].potted){
+               pottedBalls[i].render();
+           }
+           ctx.restore();
+       }
    }
 
    // event handlers
@@ -924,7 +935,10 @@ function onloadHandler()
       drawText(320,080,"Pool - by Devin Gray", WHITE);
       ctx.restore();
       */
-
+      drawTracks();
+      drawPottedBalls();
+      //draw the table over top of the potted balls
+      ctx.clearRect(0, 0, X_MAX, height);
       drawBumpers();
       drawPockets();
 
@@ -971,14 +985,36 @@ function onloadHandler()
 		     continue;
 		 }
 
-		 //TODO draw animation for ball to drop in pocket
-		 // for now... just put the ball in the tracks based on number potted
 		 pottedBalls.push(ball);
 		 ball.potted = true;
-		 ball.position.x = X_MAX+35;
-		 ball.position.y = Y_MAX-(ball.radius*2 * pottedBalls.length);
+		 ball.pottedFinalPosition.x = X_MAX + 35;
+		 ball.pottedFinalPosition.y = Y_MAX - (ball.radius * 2 * pottedBalls.length);
+		 ball.position.x = X_MAX - ball.radius;
+		 ball.position.y = 65;
 		 ball.velocity.x = 0;
 		 ball.velocity.y = 0;
+		 //second to last ball doesn't make it all the way around the turn in the rail
+		 if(pottedBalls.length === 14){
+		     ball.pottedFinalPosition.x = X_MAX + 27;
+		 }
+		 //last ball doesn't make it to the turn in the rail
+		 if(pottedBalls.length === 15){
+		     ball.pottedFinalPosition.x = X_MAX + 27 - ball.radius * 2;
+		     ball.pottedFinalPosition.y = 65;
+		 }
+
+		 //prevent multiple balls from overlapping and sliding down the rail together
+		 if(pottedBalls.length > 1){
+		     var previousPottedBall = pottedBalls[pottedBalls.length - 2];
+		     //temporary to allow ball collisions
+		     ball.potted = false;
+		     previousPottedBall.potted = false;
+		     if(colliding(i, ballList.balls.indexOf(previousPottedBall))){
+		         ball.pottedAnimationFrameDelay = previousPottedBall.pottedAnimationFrameDelay + 25;
+		     }
+		     ball.potted = true;
+		     previousPottedBall.potted = true;
+		 }
 
              }
 	 }
@@ -988,18 +1024,15 @@ function onloadHandler()
          {
             ball = this.balls[i];
 
-	    //if potted, no collision with bumper
-	    if(ball.potted) {
-                continue;
-	    }
-
-	    if(ball.position.x > X_MAX-PREFS.bumperWidth-ball.radius || ball.position.x < 0+PREFS.bumperWidth+ball.radius) {
-                ball.velocity.x *= -1;
-	    }
-	    if(ball.position.y > Y_MAX-PREFS.bumperWidth-ball.radius || ball.position.y < 0+PREFS.bumperWidth+ball.radius) {
-                ball.velocity.y *= -1;
-	    }
-
+            //if potted, no collision with bumper
+            if(!ball.potted) {
+                if(ball.position.x > X_MAX-PREFS.bumperWidth-ball.radius || ball.position.x < 0+PREFS.bumperWidth+ball.radius) {
+                        ball.velocity.x *= -1;
+                }
+                if(ball.position.y > Y_MAX-PREFS.bumperWidth-ball.radius || ball.position.y < 0+PREFS.bumperWidth+ball.radius) {
+                        ball.velocity.y *= -1;
+                }
+            }
             ball.update();
          }
 
@@ -1020,7 +1053,10 @@ function onloadHandler()
          for (var i = 0; i < this.balls.length; i++)
          {
             ctx.save();
-            this.balls[i].render();
+            //potted balls are drawn at a different time, so don't draw them now
+            if(!this.balls[i].potted || this.balls[i].type === CUE){
+                this.balls[i].render();
+            }
             ctx.restore();
          } 
 
@@ -1110,6 +1146,10 @@ function onloadHandler()
       this.velocity = new Vector(0,0);
       this.friction = PREFS.ballFriction;
       this.potted = false;
+      //used for potted animation
+      this.pottedFinalPosition = new Vector(0,0);
+      this.pottedVelocity = new Vector(2.5,-0.2);
+      this.pottedAnimationFrameDelay = 60;
 
       this.update = function()
       {
@@ -1118,6 +1158,38 @@ function onloadHandler()
 
          this.velocity.y *= this.friction;
          this.position.y += this.velocity.y;
+
+         //animate potted ball down the track
+         if(this.potted && this.type !== CUE
+         && (this.position.x !== this.pottedFinalPosition.x ||  this.position.y !== this.pottedFinalPosition.y)){
+             if(this.pottedAnimationFrameDelay > 0){
+                 this.pottedAnimationFrameDelay--;
+             }else{
+                 if(this.position.x >= this.pottedFinalPosition.x){
+                     this.position.x = this.pottedFinalPosition.x;
+                     this.pottedVelocity.x = 0;
+                 }else{
+                     this.pottedVelocity.x -= 0.055;
+                     if(this.pottedVelocity.x > 0){
+                         this.position.x += this.pottedVelocity.x;
+                     }
+                 }
+
+                 if(this.position.y >= this.pottedFinalPosition.y){
+                     this.position.y = this.pottedFinalPosition.y;
+                     this.pottedVelocity.y = 0;
+                 }else{
+                     if(this.pottedVelocity.y >= 5){
+                         this.pottedVelocity.y = 5;
+                     }else{
+                         this.pottedVelocity.y += 0.055;
+                     }
+                     if(this.pottedVelocity.y > 0){
+                        this.position.y += this.pottedVelocity.y
+                     }
+                 }
+             }
+         }
       };
 
       this.render = function()
