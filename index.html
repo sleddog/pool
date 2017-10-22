@@ -193,14 +193,21 @@ function colliding(b1, b2) {
     //if potted, no collision possible
     if(ball1.potted || ball2.potted) {
         return false;
-    }
+    }  
 
     var dx = ball1.position.x - ball2.position.x;
     var dy = ball1.position.y - ball2.position.y;
-    var distance = Math.sqrt(dx * dx + dy * dy);
+    var distanceSquared = dx * dx + dy * dy; // use squared distance to avoid sqrt
 
-    if (distance < ball1.radius + ball1.radius) {
-	return true;
+    if (distanceSquared < (ball1.radius + ball1.radius) * (ball1.radius + ball1.radius)) {
+        
+        var testd = ball1.position.nsub(ball2.position);
+        var testv = ball2.velocity.nsub(ball1.velocity);
+
+        // if balls are moving at each other
+        if (testd.dot(testv) > 0) {
+            return true;
+        }
     }
     return false;
 }
@@ -209,48 +216,49 @@ function resolveCollision(b1, b2) {
     var ball1 = ballList.balls[b1];
     var ball2 = ballList.balls[b2];
 
-    // get the mtd
     var pos1 = ball1.position.clone();
     var pos2 = ball2.position.clone();
-    var delta = pos1.sub(ball2.position);
-    var d = delta.length();
+    
+    // move balls out of each other ...
 
-    // minimum translation distance to push balls apart after intersecting
-    var tmp = ((ball1.radius + ball2.radius)-d) / d;
-    var mtd = delta.scale(tmp);
+    // current distance between balls 
+    var distanceVector = pos1.nsub(pos2);
+    // distance that each ball has to move so that balls get seperated
+    var toMoveDistance = (2.0 * PREFS.ballRadius - distanceVector.length()) * 0.5;
+    distanceVector = distanceVector.nscaleTo(toMoveDistance);
 
-    // resolve intersection --
-    // inverse mass quantities
-    var im1 = 1 / PREFS.ballMass;
-    var im2 = 1 / PREFS.ballMass;
+    // move ball 1 one direction
+    pos1 = pos1.nadd(distanceVector);
+    // ball 2 the other direction
+    pos2 = pos2.nadd(distanceVector.ninvert());
 
-    // push-pull them apart based off their mass
-    //TODO may need...
-    //var newPos1 = pos1.add(mtd.scale(im1 / (im1 + im2)));
-    //var newPos2 = pos2.sub(mtd.scale(im2 / (im1 + im2)));
+    // set new positions
+    ball1.position = pos1;
+    ball2.position = pos2;
 
-    // impact speed
-    var vel1 = ball1.velocity.clone();
-    var vel2 = ball2.velocity.clone();
-    var v = vel1.sub(vel2);
-    var mtdn = mtd.norm();
-    var vn = v.dot(mtd.norm());
+    // ... balls should now be seperated.
 
-    // sphere intersecting but moving away from each other already
-    if(vn > 0.0) {
-        return;
-    }
+    // calculate new velocities ...
 
-    // collision impulse
-    var i = (-(1.0 + PREFS.restitution) * vn) / (im1 + im2);
-    var impulse = mtd.scale(i);
+    // current velocities
+    var v1 = ball1.velocity.clone();
+    var v2 = ball2.velocity.clone();
 
-    // change in momentum
-    var newVel1 = vel1.add(impulse.scale(im1));
-    var newVel2 = vel2.sub(impulse.scale(im2));
-    ball1.velocity = newVel1;
+    // vector between current ball positions
+    var d = pos1.nsub(pos2);
+
+    // elastic collision of moving ball 1 with non-moving ball 2
+    var b1 = d.ninvert().nnorm().nscale(Math.abs(v1.x));
+    var a1 = v1.nsub(b1);
+    // elastic collision of moving ball 2 with non-moving ball 1
+    var a2 = d.nnorm().nscale(Math.abs(v2.x));
+    var b2 = v2.nsub(a2);
+
+    // new velocity is sum of both collisions
+    ball1.velocity = a1.nadd(a2);
+    ball2.velocity = b1.nadd(b2);
+
     ball1.update();
-    ball2.velocity = newVel2;
     ball2.update();
 }
 
@@ -960,12 +968,23 @@ function onloadHandler()
                 continue;
 	    }
 
-	    if(ball.position.x > X_MAX-PREFS.bumperWidth-ball.radius || ball.position.x < 0+PREFS.bumperWidth+ball.radius) {
-                ball.velocity.x *= -1;
-	    }
-	    if(ball.position.y > Y_MAX-PREFS.bumperWidth-ball.radius || ball.position.y < 0+PREFS.bumperWidth+ball.radius) {
-                ball.velocity.y *= -1;
-	    }
+	    if(ball.position.x > X_MAX-PREFS.bumperWidth-ball.radius) {
+            // repostion, if ball went to fast and left play area
+            ball.velocity.x *= -1;
+	    } else if (ball.position.x < 0+PREFS.bumperWidth+ball.radius) {
+            // repostion, if ball went to fast and left play area
+            ball.position.x = 0+PREFS.bumperWidth+ball.radius;
+            ball.velocity.x *= -1;
+        }
+	    if(ball.position.y > Y_MAX-PREFS.bumperWidth-ball.radius) {
+            // repostion, if ball went to fast and left play area
+            ball.position.y = Y_MAX-PREFS.bumperWidth-ball.radius;
+            ball.velocity.y *= -1;
+	    } else if (ball.position.y < 0+PREFS.bumperWidth+ball.radius) {
+            // repostion, if ball went to fast and left play area
+            ball.position.y = 0+PREFS.bumperWidth+ball.radius; 
+            ball.velocity.y *= -1;
+        }
 
             ball.update();
          }
@@ -1271,13 +1290,13 @@ a:hover
       </div>
       <!-- Play potted ball sound. Sound effect obtained from https://www.zapsplat.com -->
       <audio id="ball_potted" src="./sound/ball_potted.mp3" autostart="false" ></audio>
-<script type="text/javascript">
+<!-- <script type="text/javascript">
 var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
 document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
 </script>
 <script type="text/javascript">
 var pageTracker = _gat._getTracker("UA-1105056-1");
 pageTracker._trackPageview();
-</script>
+</script> -->
    </body>
 </html>
