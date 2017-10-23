@@ -107,10 +107,9 @@ var PREFS = {
     ballMass: parseFloat(1),
     ballFriction: 0.991,
     bumperWidth: 25,
-    bumperBounce: 3.5,
     showStickAt: 0.03,
     restitution: 0.85
-};
+}
 
 function shoot() {
     var x = document.getElementById('cue_x').value;
@@ -606,8 +605,6 @@ function onloadHandler()
    physics.add(PREFS, 'bumperWidth', 0, 75);
    physics.add(PREFS, 'showStickAt', 0, 5);
    physics.add(PREFS, 'restitution', 0, 5);
-
-   physics.add(PREFS, 'bumperBounce', 0, 5);
    
    appearance.open();
    sounds.open();
@@ -1030,10 +1027,10 @@ function onloadHandler()
             //if potted, no collision with bumper
             if(!ball.potted) {
                 if(ball.position.x > X_MAX-PREFS.bumperWidth-ball.radius || ball.position.x < 0+PREFS.bumperWidth+ball.radius) {
-                        ball.velocity.x *= -(PREFS.bumperBounce/5);
+                        ball.velocity.x *= -1;
                 }
                 if(ball.position.y > Y_MAX-PREFS.bumperWidth-ball.radius || ball.position.y < 0+PREFS.bumperWidth+ball.radius) {
-                        ball.velocity.y *= -(PREFS.bumperBounce/5);
+                        ball.velocity.y *= -1;
                 }
             }
             ball.update();
