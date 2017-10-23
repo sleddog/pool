@@ -1030,11 +1030,10 @@ function onloadHandler()
             //if potted, no collision with bumper
             if(!ball.potted) {
                 if(ball.position.x > X_MAX-PREFS.bumperWidth-ball.radius || ball.position.x < 0+PREFS.bumperWidth+ball.radius) {
-                    //
                         ball.velocity.x *= -(PREFS.bumperBounce/5);
                 }
                 if(ball.position.y > Y_MAX-PREFS.bumperWidth-ball.radius || ball.position.y < 0+PREFS.bumperWidth+ball.radius) {
-                        ball.velocity.y *= -(PREFS.bumperBounce/2);
+                        ball.velocity.y *= -(PREFS.bumperBounce/5);
                 }
             }
             ball.update();
