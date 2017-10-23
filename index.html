@@ -193,14 +193,21 @@ function colliding(b1, b2) {
     //if potted, no collision possible
     if(ball1.potted || ball2.potted) {
         return false;
-    }
+    }  
 
     var dx = ball1.position.x - ball2.position.x;
     var dy = ball1.position.y - ball2.position.y;
-    var distance = Math.sqrt(dx * dx + dy * dy);
+    var distanceSquared = dx * dx + dy * dy; // use squared distance to avoid sqrt
 
-    if (distance < ball1.radius + ball1.radius) {
-	return true;
+    if (distanceSquared < (ball1.radius + ball1.radius) * (ball1.radius + ball1.radius)) {
+        
+        var testd = ball1.position.nsub(ball2.position);
+        var testv = ball2.velocity.nsub(ball1.velocity);
+
+        // if balls are moving at each other
+        if (testd.dot(testv) > 0) {
+            return true;
+        }
     }
     return false;
 }
@@ -209,48 +216,49 @@ function resolveCollision(b1, b2) {
     var ball1 = ballList.balls[b1];
     var ball2 = ballList.balls[b2];
 
-    // get the mtd
     var pos1 = ball1.position.clone();
     var pos2 = ball2.position.clone();
-    var delta = pos1.sub(ball2.position);
-    var d = delta.length();
+    
+    // move balls out of each other ...
 
-    // minimum translation distance to push balls apart after intersecting
-    var tmp = ((ball1.radius + ball2.radius)-d) / d;
-    var mtd = delta.scale(tmp);
+    // current distance between balls 
+    var distanceVector = pos1.nsub(pos2);
+    // distance that each ball has to move so that balls get seperated
+    var toMoveDistance = (2.0 * PREFS.ballRadius - distanceVector.length()) * 0.5;
+    distanceVector = distanceVector.nscaleTo(toMoveDistance);
 
-    // resolve intersection --
-    // inverse mass quantities
-    var im1 = 1 / PREFS.ballMass;
-    var im2 = 1 / PREFS.ballMass;
+    // move ball 1 one direction
+    pos1 = pos1.nadd(distanceVector);
+    // ball 2 the other direction
+    pos2 = pos2.nadd(distanceVector.ninvert());
 
-    // push-pull them apart based off their mass
-    //TODO may need...
-    //var newPos1 = pos1.add(mtd.scale(im1 / (im1 + im2)));
-    //var newPos2 = pos2.sub(mtd.scale(im2 / (im1 + im2)));
+    // set new positions
+    ball1.position = pos1;
+    ball2.position = pos2;
 
-    // impact speed
-    var vel1 = ball1.velocity.clone();
-    var vel2 = ball2.velocity.clone();
-    var v = vel1.sub(vel2);
-    var mtdn = mtd.norm();
-    var vn = v.dot(mtd.norm());
+    // ... balls should now be seperated.
 
-    // sphere intersecting but moving away from each other already
-    if(vn > 0.0) {
-        return;
-    }
+    // calculate new velocities ...
 
-    // collision impulse
-    var i = (-(1.0 + PREFS.restitution) * vn) / (im1 + im2);
-    var impulse = mtd.scale(i);
+    // current velocities
+    var v1 = ball1.velocity.clone();
+    var v2 = ball2.velocity.clone();
 
-    // change in momentum
-    var newVel1 = vel1.add(impulse.scale(im1));
-    var newVel2 = vel2.sub(impulse.scale(im2));
-    ball1.velocity = newVel1;
+    // vector between current ball positions
+    var d = pos1.nsub(pos2);
+
+    // elastic collision of moving ball 1 with non-moving ball 2
+    var b1 = d.ninvert().nnorm().nscale(Math.abs(v1.x));
+    var a1 = v1.nsub(b1);
+    // elastic collision of moving ball 2 with non-moving ball 1
+    var a2 = d.nnorm().nscale(Math.abs(v2.x));
+    var b2 = v2.nsub(a2);
+
+    // new velocity is sum of both collisions
+    ball1.velocity = a1.nadd(a2);
+    ball2.velocity = b1.nadd(b2);
+
     ball1.update();
-    ball2.velocity = newVel2;
     ball2.update();
 }
 
@@ -332,7 +340,7 @@ function isCueBallColliding(cue_index){
 // that would be hit by cue ball
 function drawShootPreview(ctx, cueBallPos, mousePos) {
 
-    //draw the ghost ball
+    // draw the ghost ball
     ctx.fillStyle = GHOST_WHITE;
     ctx.strokeStyle = GHOST_WHITE;
     ctx.lineWidth = 1;
@@ -371,13 +379,11 @@ function drawShootPreview(ctx, cueBallPos, mousePos) {
     }
 }
 
+// calculates object that contains necessary info to draw ghost ball preview
 function calculateCollisionPreview(cueBallPos, mousePos) {
 
     // direction the ball is traveling
-    var moveDirection = new Vector(
-        -1.0 * (cueBallPos.x - mousePos.x),
-        -1.0 * (cueBallPos.y - mousePos.y)
-    );
+    var moveDirection = cueBallPos.nsub(mousePos).ninvert();
 
     // result object containing calculated infos
     var result = {
@@ -385,6 +391,7 @@ function calculateCollisionPreview(cueBallPos, mousePos) {
         hitBallTrajectory: null,
         pos: null // position of cue ball when collision happens
     };
+    // distance to object ball that cue ball will collide with
     var ballToCollideWithDistance = Number.MAX_VALUE;
 
     // iterate through ball list 
@@ -401,19 +408,13 @@ function calculateCollisionPreview(cueBallPos, mousePos) {
         // vector from cue ball to mouse click position
         var b = moveDirection;
 
-        var projection = orthogonalVectorProjection(
-            a, b
-        );
-
+        var projection = orthogonalVectorProjection(a, b);
+        
         // Vector between object ball and projection.
         // Length of this vector is equal to the minimal distance between object ball
         // and initial path of cue ball
-        var distanceVector = new Vector(
-            (a.x - projection.x),
-            (a.y - projection.y)
-        );
-        var distance = vectorMagnitude(distanceVector);
-
+        var distanceVector = a.nsub(projection);
+        var distance = distanceVector.length();
 
         // cue ball could hit the current ball
         if (distance < PREFS.ballRadius * 2.0) {
@@ -462,43 +463,29 @@ function calculateCollisionPreview(cueBallPos, mousePos) {
 
                 ballToCollideWithDistance = distanceToCue;
 
-                var resultMagnitude = vectorMagnitude(projection);
+                var resultMagnitude = projection.length();
                 // good ol' Pythagorean theorem
                 var delta = Math.sqrt(Math.pow(2 * PREFS.ballRadius, 2) - Math.pow(distance, 2));
                 var targetMagnitude = ((resultMagnitude - delta) / resultMagnitude) * resultMagnitude;
 
                 // scale projection vector to desired length
-                projection = normalizeVector(projection);
-                projection = new Vector(
-                    projection.x * targetMagnitude,
-                    projection.y * targetMagnitude
-                );
+                projection = projection.nnorm();
+                projection = projection.nscale(targetMagnitude);
 
                 // set result
                 result.ball = currentBall;
-                result.pos = new Vector(
-                    cueBallPos.x + projection.x,
-                    cueBallPos.y + projection.y
-                );
+                result.pos = projection.nadd(cueBallPos);
 
                 // calculate trajectory angle of object ball that is hit
-                var trajectory = new Vector(
-                    (currentBall.position.x - result.pos.x),
-                    (currentBall.position.y - result.pos.y)
-                );
+                var trajectory = currentBall.position.nsub(result.pos);
+
                 // set length of trajectory vector to 1250, becaus that should be 
                 // long enough
-                trajectory = normalizeVector(trajectory);
-                trajectory = new Vector(
-                    trajectory.x * 1250,
-                    trajectory.y * 1250
-                );
+                trajectory = trajectory.nnorm();
+                trajectory = trajectory.nscale(1250);
 
                 // trajectory starts from hit ball
-                result.hitBallTrajectory = new Vector(
-                    currentBall.position.x + trajectory.x,
-                    currentBall.position.y + trajectory.y
-                );
+                result.hitBallTrajectory = trajectory.nadd(currentBall.position);
             }
         }
     }
@@ -528,25 +515,13 @@ function isPointingLeftDown(v) {
 
 // calculates orthogonal projection of a onto b
 function orthogonalVectorProjection(a, b) {
-    var dotp = dotProduct(a, b);
-    var divident = Math.pow(vectorMagnitude(b), 2);
+    var dotp = a.dot(b);
+    var divident = Math.pow(b.length(), 2);
     var result = new Vector(
         (dotp / divident) * b.x,
         (dotp / divident) * b.y
     );
     return result;
-}
-
-function dotProduct(a, b) {
-    return a.x * b.x + a.y * b.y;
-}
-
-function vectorMagnitude(v) {
-    return Math.sqrt(Math.pow(v.x, 2) + Math.pow(v.y, 2));
-}
-function normalizeVector(v) {
-    var magnitude = vectorMagnitude(v);
-    return new Vector((1 / magnitude) * v.x, (1 / magnitude) * v.y);
 }
 
 // --------------------------------------------------------------------------------------------------------
@@ -1026,11 +1001,22 @@ function onloadHandler()
 
             //if potted, no collision with bumper
             if(!ball.potted) {
-                if(ball.position.x > X_MAX-PREFS.bumperWidth-ball.radius || ball.position.x < 0+PREFS.bumperWidth+ball.radius) {
-                        ball.velocity.x *= -1;
+                if(ball.position.x > X_MAX-PREFS.bumperWidth-ball.radius) {
+                    // repostion, if ball went to fast and left play area
+                    ball.velocity.x *= -1;
+                } else if (ball.position.x < 0+PREFS.bumperWidth+ball.radius) {
+                    // repostion, if ball went to fast and left play area
+                    ball.position.x = 0+PREFS.bumperWidth+ball.radius;
+                    ball.velocity.x *= -1;
                 }
-                if(ball.position.y > Y_MAX-PREFS.bumperWidth-ball.radius || ball.position.y < 0+PREFS.bumperWidth+ball.radius) {
-                        ball.velocity.y *= -1;
+                if(ball.position.y > Y_MAX-PREFS.bumperWidth-ball.radius) {
+                    // repostion, if ball went to fast and left play area
+                    ball.position.y = Y_MAX-PREFS.bumperWidth-ball.radius;
+                    ball.velocity.y *= -1;
+                } else if (ball.position.y < 0+PREFS.bumperWidth+ball.radius) {
+                    // repostion, if ball went to fast and left play area
+                    ball.position.y = 0+PREFS.bumperWidth+ball.radius; 
+                    ball.velocity.y *= -1;
                 }
             }
             ball.update();
