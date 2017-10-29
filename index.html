@@ -476,7 +476,7 @@ function calculateCollisionPreview(cueBallPos, mousePos) {
                 ballToCollideWithDistance = distanceToCue;
 
                 var resultMagnitude = vectorMagnitude(projection);
-                // good ol' Pythagorean theorem
+                // good old Pythagorean theorem
                 var delta = Math.sqrt(Math.pow(2 * PREFS.ballRadius, 2) - Math.pow(distance, 2));
                 var targetMagnitude = ((resultMagnitude - delta) / resultMagnitude) * resultMagnitude;
 
@@ -983,18 +983,18 @@ function onloadHandler()
 	         ball = this.balls[i];
 		 if(ball.type == CUE) {
 		     if(!ball.potted){
-                 console.log("SCRATCH - placing cue...");
-                 ball.velocity.x = 0;
-                 ball.velocity.y = 0;
-                 ball.potted = true;
-                 ball.position.x = PREFS.cueX;
-                 ball.position.y = PREFS.cueY;
-                 //if there's a ball already at the kitchen position
-                 //force the user to place the cue ball
-                 if(isCueBallColliding(0)){
-                     placingCue = true;
-                 }
-             }
+                         console.log("SCRATCH - placing cue...");
+                         ball.velocity.x = 0;
+                         ball.velocity.y = 0;
+                         ball.potted = true;
+                         ball.position.x = PREFS.cueX;
+                         ball.position.y = PREFS.cueY;
+                         //if there's a ball already at the kitchen position
+                         //force the user to place the cue ball
+                         if(isCueBallColliding(0)){
+                             placingCue = true;
+                         }
+                     }
 		     continue;
 		 }
 
@@ -1010,7 +1010,7 @@ function onloadHandler()
 		 if(pottedBalls.length === 14){
 		     ball.pottedFinalPosition.x = X_MAX + 27;
 		 }
-		 //last ball doesn't make it to the turn in the rail
+		 //last ball does not make it to the turn in the rail
 		 if(pottedBalls.length === 15){
 		     ball.pottedFinalPosition.x = X_MAX + 27 - ball.radius * 2;
 		     ball.pottedFinalPosition.y = 65;
@@ -1073,8 +1073,7 @@ function onloadHandler()
             ctx.restore();
          } 
 
-	 if (Math.abs(this.balls[0].velocity.x) < PREFS.showStickAt && Math.abs(this.balls[0].velocity.y) < PREFS.showStickAt
-         && !placingCue) {
+	 if (Math.abs(this.balls[0].velocity.x) < PREFS.showStickAt && Math.abs(this.balls[0].velocity.y) < PREFS.showStickAt && !placingCue) {
 	 	var x = this.balls[0].position.x - this.mousex,
 		    y = this.balls[0].position.y - this.mousey;
 
@@ -1098,7 +1097,7 @@ function onloadHandler()
 		if(!animatingCueStickShoot){
 		    //move cue stick back when changing the power slider
 		    ctx.translate((norm_x * stickMoveDistance), (norm_y * stickMoveDistance));
-		}else{
+		} else {
 		    cueStickAnimationCurrentFrame++;
 
 		    //calculate how far into the animation, starting at 100%, going down to 0%
@@ -1114,6 +1113,7 @@ function onloadHandler()
 		    }
 		}
 
+		//draw the cue stick shaft
 		ctx.beginPath();
 		ctx.lineWidth = 10;
 		ctx.strokeStyle = PREFS.stickColor;
@@ -1122,6 +1122,7 @@ function onloadHandler()
 		ctx.stroke();
 		ctx.closePath();
 
+		//draw the ferrule
 		ctx.beginPath();
 		ctx.lineWidth = 10;
 		ctx.strokeStyle = WHITE;
@@ -1130,6 +1131,7 @@ function onloadHandler()
 		ctx.stroke(); 
 		ctx.closePath();
 
+		//draw the tip
 		ctx.beginPath();
 		ctx.lineWidth = 10;
 		ctx.strokeStyle = BLACK;
@@ -1139,7 +1141,7 @@ function onloadHandler()
 		ctx.closePath();
 
 		ctx.restore();
-	 }else{
+	 } else {
          //still allow shooting if the ball is rolling
          if(animatingCueStickShoot){
              shoot();
@@ -1173,8 +1175,7 @@ function onloadHandler()
          this.position.y += this.velocity.y;
 
          //animate potted ball down the track
-         if(this.potted && this.type !== CUE
-         && (this.position.x !== this.pottedFinalPosition.x ||  this.position.y !== this.pottedFinalPosition.y)){
+         if(this.potted && this.type !== CUE && (this.position.x !== this.pottedFinalPosition.x ||  this.position.y !== this.pottedFinalPosition.y)){
              if(this.pottedAnimationFrameDelay > 0){
                  this.pottedAnimationFrameDelay--;
              }else{
@@ -1262,7 +1263,8 @@ function onloadHandler()
 	 }
       };
    };
-}
+
+} //end of onloadHandler
 
 // requestAnimFrame shim
 window.requestAnimFrame = (function()
