@@ -197,10 +197,17 @@ function colliding(b1, b2) {
 
     var dx = ball1.position.x - ball2.position.x;
     var dy = ball1.position.y - ball2.position.y;
-    var distance = Math.sqrt(dx * dx + dy * dy);
+    var distanceSquared = dx * dx + dy * dy; // use squared distance to avoid sqrt
 
-    if (distance < ball1.radius + ball1.radius) {
-	return true;
+    if (distanceSquared < (ball1.radius + ball1.radius) * (ball1.radius + ball1.radius)) {
+        
+        var dist = ball1.position.nsub(ball2.position);
+        var vel = ball2.velocity.nsub(ball1.velocity);
+
+        // if balls are moving at each other
+        if (dist.dot(vel) > 0) {
+            return true;
+        }
     }
     return false;
 }
@@ -212,45 +219,51 @@ function resolveCollision(b1, b2) {
     // get the mtd
     var pos1 = ball1.position.clone();
     var pos2 = ball2.position.clone();
-    var delta = pos1.sub(ball2.position);
-    var d = delta.length();
+    
+    // move balls out of each other based on their current speed...
 
-    // minimum translation distance to push balls apart after intersecting
-    var tmp = ((ball1.radius + ball2.radius)-d) / d;
-    var mtd = delta.scale(tmp);
+    var speedBall1 = ball1.velocity.length();
+    var speedBall2 = ball2.velocity.length();
+    var speedSum = speedBall1 + speedBall2;
 
-    // resolve intersection --
-    // inverse mass quantities
-    var im1 = 1 / PREFS.ballMass;
-    var im2 = 1 / PREFS.ballMass;
+    // current distance between balls 
+    var distanceVector = pos1.nsub(pos2);
+    // distance that each ball has to move so that balls get seperated
+    var toMoveDistanceBall1 = (2.0 * PREFS.ballRadius - distanceVector.length()) * (speedBall1 / speedSum);
+    var toMoveDistanceBall2 = (2.0 * PREFS.ballRadius - distanceVector.length()) * (speedBall2 / speedSum);
 
-    // push-pull them apart based off their mass
-    //TODO may need...
-    //var newPos1 = pos1.add(mtd.scale(im1 / (im1 + im2)));
-    //var newPos2 = pos2.sub(mtd.scale(im2 / (im1 + im2)));
+    // move ball 1 one direction
+    pos1 = pos1.nadd(distanceVector.nscaleTo(toMoveDistanceBall1));
+    // ball 2 the other direction
+    pos2 = pos2.nadd(distanceVector.nscaleTo(toMoveDistanceBall2).ninvert());
 
-    // impact speed
-    var vel1 = ball1.velocity.clone();
-    var vel2 = ball2.velocity.clone();
-    var v = vel1.sub(vel2);
-    var mtdn = mtd.norm();
-    var vn = v.dot(mtd.norm());
+    // set new positions
+    ball1.position = pos1;
+    ball2.position = pos2;
 
-    // sphere intersecting but moving away from each other already
-    if(vn > 0.0) {
-        return;
-    }
+    // ... balls should now be seperated.
 
-    // collision impulse
-    var i = (-(1.0 + PREFS.restitution) * vn) / (im1 + im2);
-    var impulse = mtd.scale(i);
+    // calculate new velocities ...
 
-    // change in momentum
-    var newVel1 = vel1.add(impulse.scale(im1));
-    var newVel2 = vel2.sub(impulse.scale(im2));
-    ball1.velocity = newVel1;
+    // current velocities
+    var v1 = ball1.velocity.clone();
+    var v2 = ball2.velocity.clone();
+
+    // vector between current ball positions
+    var d = pos1.nsub(pos2);
+
+    // elastic collision of moving ball 1 with non-moving ball 2
+    var b1 = d.ninvert().nnorm().nscale(Math.abs(v1.x));
+    var a1 = v1.nsub(b1);
+    // elastic collision of moving ball 2 with non-moving ball 1
+    var a2 = d.nnorm().nscale(Math.abs(v2.x));
+    var b2 = v2.nsub(a2);
+
+    // new velocity is sum of both collisions
+    ball1.velocity = a1.nadd(a2);
     ball1.update();
-    ball2.velocity = newVel2;
+    
+    ball2.velocity = b1.nadd(b2);
     ball2.update();
 }
 
