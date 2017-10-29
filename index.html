@@ -201,11 +201,11 @@ function colliding(b1, b2) {
 
     if (distanceSquared < (ball1.radius + ball1.radius) * (ball1.radius + ball1.radius)) {
         
-        var testd = ball1.position.nsub(ball2.position);
-        var testv = ball2.velocity.nsub(ball1.velocity);
+        var dist = ball1.position.nsub(ball2.position);
+        var vel = ball2.velocity.nsub(ball1.velocity);
 
         // if balls are moving at each other
-        if (testd.dot(testv) > 0) {
+        if (dist.dot(vel) > 0) {
             return true;
         }
     }
@@ -219,18 +219,22 @@ function resolveCollision(b1, b2) {
     var pos1 = ball1.position.clone();
     var pos2 = ball2.position.clone();
     
-    // move balls out of each other ...
+    // move balls out of each other based on their current speed...
+
+    var speedBall1 = ball1.velocity.length();
+    var speedBall2 = ball2.velocity.length();
+    var speedSum = speedBall1 + speedBall2;
 
     // current distance between balls 
     var distanceVector = pos1.nsub(pos2);
     // distance that each ball has to move so that balls get seperated
-    var toMoveDistance = (2.0 * PREFS.ballRadius - distanceVector.length()) * 0.5;
-    distanceVector = distanceVector.nscaleTo(toMoveDistance);
+    var toMoveDistanceBall1 = (2.0 * PREFS.ballRadius - distanceVector.length()) * (speedBall1 / speedSum);
+    var toMoveDistanceBall2 = (2.0 * PREFS.ballRadius - distanceVector.length()) * (speedBall2 / speedSum);
 
     // move ball 1 one direction
-    pos1 = pos1.nadd(distanceVector);
+    pos1 = pos1.nadd(distanceVector.nscaleTo(toMoveDistanceBall1));
     // ball 2 the other direction
-    pos2 = pos2.nadd(distanceVector.ninvert());
+    pos2 = pos2.nadd(distanceVector.nscaleTo(toMoveDistanceBall2).ninvert());
 
     // set new positions
     ball1.position = pos1;
@@ -256,9 +260,9 @@ function resolveCollision(b1, b2) {
 
     // new velocity is sum of both collisions
     ball1.velocity = a1.nadd(a2);
-    ball2.velocity = b1.nadd(b2);
-
     ball1.update();
+    
+    ball2.velocity = b1.nadd(b2);
     ball2.update();
 }
 
