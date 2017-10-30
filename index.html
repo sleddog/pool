@@ -49,6 +49,7 @@ var newVelocity =PowerSlider.value;
         animatingCueStickShoot = true;
         cueStickAnimationCurrentFrame = 0;
     }
+
 }
 
 var WHITE = "rgb(255,255,255)";
@@ -623,6 +624,8 @@ function onloadHandler()
    sounds.open();
    physics.open();
 
+  
+
    function getRack() {
        var radius = PREFS.ballRadius;
        var xFactor = 1.73205;
@@ -969,7 +972,7 @@ function onloadHandler()
    function BallList()
    {
       this.mousex = ctx.canvas.clientWidth/2;
-      this.mousey = ctx.canvas.clientHeight/2;;
+      this.mousey = ctx.canvas.clientHeight/2;
       this.balls = [];
       this.showGhostBall = false;
 
@@ -1375,7 +1378,7 @@ a:hover
             <input type="text" id="cue_velocity" value="4" style="width: 40px"/>
         </div>
         <div class="pos-area">
-            <span>x:</span><input type="text" id="cue_x" value="10" style="width: 60px"/>
+            <span>x:</span><input type="text" id="cue_x" value="1.0" style="width: 60px"/>
             <span>y:</span><input type="text" id="cue_y" value="0" style="width: 60px"/>   
         </div>
         
