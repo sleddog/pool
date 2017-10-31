@@ -46,8 +46,7 @@ function processPowerSlider(){
     //ignore and reset the power slider if the player tries to shoot while balls are moving
     for (var i = 0; i < ballList.balls.length; i++)
     {
-        var isBallStationary = Math.abs(ballList.balls[i].velocity.x) < PREFS.showStickAt && Math.abs(ballList.balls[i].velocity.y) < PREFS.showStickAt;
-        if (!isBallStationary){
+        if (!ballList.balls[i].isStationary()){
             PowerSlider.value = 0;
             return;
         }
@@ -1087,7 +1086,7 @@ function onloadHandler()
             }
             ctx.restore();
 
-            allBallsAreStationary &= Math.abs(this.balls[i].velocity.x) < PREFS.showStickAt && Math.abs(this.balls[i].velocity.y) < PREFS.showStickAt;
+            allBallsAreStationary &= this.balls[i].isStationary();
          } 
 
 	 if (allBallsAreStationary && !placingCue){
@@ -1222,6 +1221,11 @@ function onloadHandler()
              }
          }
       };
+
+      this.isStationary = function()
+      {
+        return Math.abs(this.velocity.x) < PREFS.showStickAt && Math.abs(this.velocity.y) < PREFS.showStickAt;
+      }
 
       this.render = function()
       {
