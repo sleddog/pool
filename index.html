@@ -42,8 +42,18 @@ document.addEventListener('keyup', function(event) {
 
 //Function that processes the powerslider so it's easily reusable.
 function processPowerSlider(){
-//fire the shot after the user changes the value of the power-slider higher then 0
-var newVelocity =PowerSlider.value;
+
+    //ignore and reset the power slider if the player tries to shoot while balls are moving
+    for (var i = 0; i < ballList.balls.length; i++)
+    {
+        if (!ballList.balls[i].isStationary()){
+            PowerSlider.value = 0;
+            return;
+        }
+    }
+
+    //fire the shot after the user changes the value of the power-slider higher then 0
+    var newVelocity = PowerSlider.value;
     if(newVelocity > 0 && !animatingCueStickShoot) {
         //start the cue stick shooting animation
         animatingCueStickShoot = true;
@@ -1066,6 +1076,7 @@ function onloadHandler()
 
       this.render = function()
       {
+         var allBallsAreStationary = true;
          for (var i = 0; i < this.balls.length; i++)
          {
             ctx.save();
@@ -1074,9 +1085,11 @@ function onloadHandler()
                 this.balls[i].render();
             }
             ctx.restore();
+
+            allBallsAreStationary &= this.balls[i].isStationary();
          } 
 
-	 if (Math.abs(this.balls[0].velocity.x) < PREFS.showStickAt && Math.abs(this.balls[0].velocity.y) < PREFS.showStickAt && !placingCue) {
+	 if (allBallsAreStationary && !placingCue){
 	 	var x = this.balls[0].position.x - this.mousex,
 		    y = this.balls[0].position.y - this.mousey;
 
@@ -1208,6 +1221,11 @@ function onloadHandler()
              }
          }
       };
+
+      this.isStationary = function()
+      {
+        return Math.abs(this.velocity.x) < PREFS.showStickAt && Math.abs(this.velocity.y) < PREFS.showStickAt;
+      }
 
       this.render = function()
       {
