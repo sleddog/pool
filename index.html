@@ -14,7 +14,7 @@ window.addEventListener('load', onloadHandler, false);
 var PowerSlider;
 
 //When document is ready add an event listener onto the #power-slider
-document.addEventListener("DOMContentLoaded", function(event) { 
+document.addEventListener("DOMContentLoaded", function(event) {
 
 //We assign the power slider after the DOM has loaded
 PowerSlider = document.getElementById('power-slider');
@@ -35,7 +35,7 @@ document.addEventListener('keyup', function(event) {
         processPowerSlider();   //If we released space just now, we call the process function for the powerslider.
     }, false);
 
-//The processPowerSlider handles generally the power slider and here it's tied to change event on the actual DOM slider so it processes mouse slider drag too. 
+//The processPowerSlider handles generally the power slider and here it's tied to change event on the actual DOM slider so it processes mouse slider drag too.
   document.getElementById("power-slider").addEventListener("change",processPowerSlider);
 });
 
@@ -111,12 +111,12 @@ var PREFS = {
     rackY: 320,
     cueX: 200,
     cueY: 320,
-    
+
     minVelocity: 1,
     maxVelocity: 30,
     ballRadius: 20,
     ballMass: parseFloat(1),
-    ballFriction: 0.991,
+    ballFriction: 0.987,
     bumperWidth: 25,
     showStickAt: 0.03,
     restitution: 0.85
@@ -170,7 +170,7 @@ function playSound(sound, vol = 1.0){
 /**
  * Map the velocity of a collision (involving one or two balls)
  * to a sound volume suitable for use in a call to playSound()
- * 
+ *
  * Note: Pass the ball indices here, rather than passing the ball objects
  * directly
  */
@@ -211,7 +211,7 @@ function colliding(b1, b2) {
     var distanceSquared = dx * dx + dy * dy; // use squared distance to avoid sqrt
 
     if (distanceSquared < (ball1.radius + ball1.radius) * (ball1.radius + ball1.radius)) {
-        
+
         var dist = ball1.position.nsub(ball2.position);
         var vel = ball2.velocity.nsub(ball1.velocity);
 
@@ -230,14 +230,14 @@ function resolveCollision(b1, b2) {
     // get the mtd
     var pos1 = ball1.position.clone();
     var pos2 = ball2.position.clone();
-    
+
     // move balls out of each other based on their current speed...
 
     var speedBall1 = ball1.velocity.length();
     var speedBall2 = ball2.velocity.length();
     var speedSum = speedBall1 + speedBall2;
 
-    // current distance between balls 
+    // current distance between balls
     var distanceVector = pos1.nsub(pos2);
     // distance that each ball has to move so that balls get seperated
     var toMoveDistanceBall1 = (2.0 * PREFS.ballRadius - distanceVector.length()) * (speedBall1 / speedSum);
@@ -273,7 +273,7 @@ function resolveCollision(b1, b2) {
     // new velocity is sum of both collisions
     ball1.velocity = a1.nadd(a2);
     ball1.update();
-    
+
     ball2.velocity = b1.nadd(b2);
     ball2.update();
 }
@@ -411,11 +411,11 @@ function calculateCollisionPreview(cueBallPos, mousePos) {
     };
     var ballToCollideWithDistance = Number.MAX_VALUE;
 
-    // iterate through ball list 
+    // iterate through ball list
     for (var i = 0; i < ballList.balls.length; i++) {
         var currentBall = ballList.balls[i];
 
-        // skip cue ball and potted balls 
+        // skip cue ball and potted balls
         if (currentBall.potted || currentBall.type == CUE) {
             continue;
         }
@@ -510,7 +510,7 @@ function calculateCollisionPreview(cueBallPos, mousePos) {
                     (currentBall.position.x - result.pos.x),
                     (currentBall.position.y - result.pos.y)
                 );
-                // set length of trajectory vector to 1250, becaus that should be 
+                // set length of trajectory vector to 1250, becaus that should be
                 // long enough
                 trajectory = normalizeVector(trajectory);
                 trajectory = new Vector(
@@ -579,7 +579,7 @@ function normalizeVector(v) {
 
 
 function onloadHandler()
-{   
+{
    // get the canvas DOM element
    var canvas = document.getElementById('canvas'),
        ctx = canvas.getContext("2d"),
@@ -589,10 +589,10 @@ function onloadHandler()
    // data structures - generate initial balls
    ballList = new BallList();
    ballList.balls = getRack();
-   
+
    var gui = new dat.GUI();
    dat.GUI.toggleHide();
-    
+
    var appearance = gui.addFolder('Appearance');
    var sounds = gui.addFolder('Sounds');
    var physics = gui.addFolder('Physics');
@@ -614,9 +614,9 @@ function onloadHandler()
    appearance.add(PREFS, 'cueY', 0, Y_MAX).onChange(function(color) {
        ballList.balls = getRack();
    });
-   
+
    sounds.add(PREFS, 'mute', 0, 1);
-   
+
    physics.add(PREFS, 'minVelocity', 0, 500);
    physics.add(PREFS, 'maxVelocity', 0, 500);
    physics.add(PREFS, 'ballRadius', 10, 30).onChange(function() {
@@ -629,12 +629,12 @@ function onloadHandler()
    physics.add(PREFS, 'bumperWidth', 0, 75);
    physics.add(PREFS, 'showStickAt', 0, 5);
    physics.add(PREFS, 'restitution', 0, 5);
-   
+
    appearance.open();
    sounds.open();
    physics.open();
 
-  
+
 
    function getRack() {
        var radius = PREFS.ballRadius;
@@ -838,7 +838,7 @@ function onloadHandler()
    }
 
    // event handlers
-  
+
    var mouseMove = function(e)
    {
        var cue_ball = ballList.balls[0];
@@ -1087,7 +1087,7 @@ function onloadHandler()
             ctx.restore();
 
             allBallsAreStationary &= this.balls[i].isStationary();
-         } 
+         }
 
 	 if (allBallsAreStationary && !placingCue){
 	 	var x = this.balls[0].position.x - this.mousex,
@@ -1097,7 +1097,7 @@ function onloadHandler()
 		var norm_y = y / Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
 
         if(this.showGhostBall) {
-         
+
             drawShootPreview(
                 ctx,
                 this.balls[0].position,
@@ -1144,7 +1144,7 @@ function onloadHandler()
 		ctx.strokeStyle = WHITE;
 		ctx.moveTo(0, 0);
 		ctx.lineTo(norm_x * 20, norm_y * 20);
-		ctx.stroke(); 
+		ctx.stroke();
 		ctx.closePath();
 
 		//draw the tip
@@ -1153,7 +1153,7 @@ function onloadHandler()
 		ctx.strokeStyle = BLACK;
 		ctx.moveTo(0, 0);
 		ctx.lineTo(norm_x * 10, norm_y * 10);
-		ctx.stroke(); 
+		ctx.stroke();
 		ctx.closePath();
 
 		ctx.restore();
@@ -1387,7 +1387,7 @@ a:hover
          	<canvas id="canvas" width="1190" height="640"></canvas>
      	</div>
       </div>
-    
+
       <table><tr>
       <td>
       <div id="custom-area" style="display:none">
@@ -1397,14 +1397,14 @@ a:hover
         </div>
         <div class="pos-area">
             <span>x:</span><input type="text" id="cue_x" value="1.0" style="width: 60px"/>
-            <span>y:</span><input type="text" id="cue_y" value="0" style="width: 60px"/>   
+            <span>y:</span><input type="text" id="cue_y" value="0" style="width: 60px"/>
         </div>
-        
+
       </div>
       </td>
       <td>
       <div id="linkDiv">
-	      Options ('<b>H</b>' key) &nbsp;&nbsp;|&nbsp;&nbsp; 
+	      Options ('<b>H</b>' key) &nbsp;&nbsp;|&nbsp;&nbsp;
         <a id="link" href="https://github.com/sleddog/pool" target="_blank">github.com/sleddog/pool</a>
       </div>
       </td>
